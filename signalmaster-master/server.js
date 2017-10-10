@@ -7,8 +7,8 @@ const WebSocketServer = WebSocket.Server;
 
 // Yes, SSL is required
 const serverConfig = {
-    key: fs.readFileSync('./ssl/key.pem'),
-    cert: fs.readFileSync('./ssl/cert.pem'),
+    key: fs.readFileSync('./ssl/key2.key'),
+    cert: fs.readFileSync('./ssl/cert2.cert'),
     passphrase: "123456789"
 };
 
@@ -37,6 +37,7 @@ httpsServer.listen(HTTPS_PORT, '0.0.0.0');
 var wss = new WebSocketServer({server: httpsServer});
 
 wss.on('connection', function(ws) {
+    console.log("New connection");
     ws.on('message', function(message) {
         // Broadcast any received message to all clients
         console.log('received: %s', message);
@@ -45,6 +46,7 @@ wss.on('connection', function(ws) {
 });
 
 wss.broadcast = function(data) {
+    console.log("broadcasting");
     this.clients.forEach(function(client) {
         if(client.readyState === WebSocket.OPEN) {
             client.send(data);

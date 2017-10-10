@@ -16,6 +16,7 @@ function pageReady() {
 	localVideo = document.getElementById('localVideo');
 	remoteVideo = document.getElementById('remoteVideo');
 
+	console.log("Location :: " + window.location.hostname);
 	serverConnection = new WebSocket('wss://' + window.location.hostname + ':8443');
 	console.log("Connected to server");
 	serverConnection.onmessage = gotMessageFromServer;
@@ -35,6 +36,7 @@ function pageReady() {
 function getUserMediaSuccess(stream) {
 	localStream = stream;
 	localVideo.src = window.URL.createObjectURL(stream);
+	//localVideo.src = localStream;
 }
 
 function start(isCaller) {
@@ -75,7 +77,7 @@ function gotIceCandidate(event) {
 }
 
 function createdDescription(description) {
-	console.log('got description');
+	console.log('got description, uuid: ' + uuid);
 
 	peerConnection.setLocalDescription(description).then(function () {
 		serverConnection.send(JSON.stringify({ 'sdp': peerConnection.localDescription, 'uuid': uuid }));
