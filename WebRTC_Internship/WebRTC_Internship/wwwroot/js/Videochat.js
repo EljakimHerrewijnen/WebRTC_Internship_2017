@@ -12,7 +12,6 @@ var peerConnectionConfig = {
 
 function pageReady() {
 	uuid = uuid();
-
 	localVideo = document.getElementById('localVideo');
 	remoteVideo = document.getElementById('remoteVideo');
 
@@ -77,8 +76,6 @@ function gotIceCandidate(event) {
 }
 
 function createdDescription(description) {
-	console.log('got description, uuid: ' + uuid);
-
 	peerConnection.setLocalDescription(description).then(function () {
 		serverConnection.send(JSON.stringify({ 'sdp': peerConnection.localDescription, 'uuid': uuid }));
 	}).catch(errorHandler);

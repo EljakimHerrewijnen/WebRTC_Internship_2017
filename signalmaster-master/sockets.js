@@ -9,9 +9,10 @@ module.exports = function (server, config) {
         client.resources = {
             screen: false,
             video: true,
-            audio: false
+            audio: false    
         };
 
+        console.log("Something in Socket");
         // pass a message to another id
         client.on('message', function (details) {
             if (!details) return;

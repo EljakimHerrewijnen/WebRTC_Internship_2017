@@ -14,7 +14,7 @@ const serverConfig = {
 
 // ----------------------------------------------------------------------------------------
 
-// Server for direct responses
+// Create a server for the client html page
 var handleRequest = function(request, response) {
     // Render the single client html file for any request the HTTP server receives
     console.log('request received: ' + request.url);
@@ -27,59 +27,36 @@ var handleRequest = function(request, response) {
         response.end();
     }
 };
+
 var httpsServer = https.createServer(serverConfig, handleRequest);
 httpsServer.listen(HTTPS_PORT, '0.0.0.0');
 
 // ----------------------------------------------------------------------------------------
 
-// Real server for calls
+// Create a server for handling websocket calls
 var wss = new WebSocketServer({server: httpsServer});
-var chatrooms = [];
+rooms = [];
 
-wss.on('connection', function(ws){
-    ws.on('message', function(message){
-        var obj = JSON.parse(message);
-        var uuid = obj['uuid'];
-        console.log("Client uuid == %s" + obj['clientuuid']);
-        wss.joinRoom(uuid, message);
-        //wss.broadcast(message);
+wss.on('connection', function(ws) {
+    console.log("New connection");
+    ws.on('message', function(message) {
+        console.log('received: %s', message);
+        wss.broadcast(message);
+
     });
 });
 
-wss.joinRoom = function(uuid, data){
-    console.log("Searching rooms...");
-    var exists = false;
-    var count = 0;
-    for(var i = 0; i < chatrooms.length; i++){
-        if(chatrooms[i] == uuid){
-            console.log("Found one");
-            exists= true;
-        }
-        count = i + 1;
-    }
-    if(!exists){chatrooms[count] = uuid;}
-    console.log(chatrooms);
-    wss.senddata(uuid, data)
-};
-
-wss.senddata = function(uuid, data){
-    this.clients.forEach(function(client){
-        var obj = JSON.parse(data);
-        var chatUUID = obj['uuid'];
-        if(chatUUID === uuid && client.readyState === WebSocket.OPEN){
-            console.log("Found a matching UUID");
-            client.send(data);
-        }
-    })
+wss.joinRoom = function(message){
+    wss.broadcast(message);
 }
 
-// wss.broadcast = function(data) {
-//     console.log("broadcasting");
-//     this.clients.forEach(function(client) {
-//         if(client.readyState === WebSocket.OPEN) {
-//             client.send(data);
-//         }
-//     });
-// };
+wss.broadcast = function(data) {
+    console.log("broadcasting");
+    this.clients.forEach(function(client) {
+        if(client.readyState === WebSocket.OPEN) {
+            client.send(data);
+        }
+    });
+};
 
 console.log('Server running. Visit https://localhost:' + HTTPS_PORT + ' in Firefox/Chrome (note the HTTPS; there is no HTTP -> HTTPS redirect!)');
