@@ -5,7 +5,7 @@ const https = require('https');
 const WebSocket = require('ws');
 const WebSocketServer = WebSocket.Server;
 
-// Yes, SSL is required
+// SSL configuration
 const serverConfig = {
     key: fs.readFileSync('./ssl/key2.key'),
     cert: fs.readFileSync('./ssl/cert2.cert'),
@@ -37,35 +37,42 @@ var wss = new WebSocketServer({server: httpsServer});
 var chatrooms = [];
 
 wss.on('connection', function(ws){
+    console.log('new connection ');
     ws.on('message', function(message){
         var obj = JSON.parse(message);
         var uuid = obj['uuid'];
+        var clientuuid = obj['clientuuid']
         console.log("Client uuid == %s" + obj['clientuuid']);
-        wss.joinRoom(uuid, message);
+        wss.joinRoom(uuid, message, clientuuid);
         //wss.broadcast(message);
     });
 });
 
-wss.joinRoom = function(uuid, data){
+wss.joinRoom = function(uuid, data, clientuuid){
     console.log("Searching rooms...");
     var exists = false;
     var count = 0;
     for(var i = 0; i < chatrooms.length; i++){
         if(chatrooms[i] == uuid){
             console.log("Found one");
-            exists= true;
+            exists = true;
+            wss.senddata(uuid, data, clientuuid)
         }
         count = i + 1;
     }
     if(!exists){chatrooms[count] = uuid;}
     console.log(chatrooms);
-    wss.senddata(uuid, data)
 };
 
-wss.senddata = function(uuid, data){
+wss.senddata = function(uuid, data, clientuuid){
     this.clients.forEach(function(client){
+        console.log(client.uuid);
         var obj = JSON.parse(data);
         var chatUUID = obj['uuid'];
+        console.log("Chat uuid == %s"+ chatUUID);
+        var clientUUID = obj['clientuuid']
+        console.log("CLIENT UUID = %s" + clientUUID);
+        console.log("Far away uuid %s"+ clientuuid)
         if(chatUUID === uuid && client.readyState === WebSocket.OPEN){
             console.log("Found a matching UUID");
             client.send(data);

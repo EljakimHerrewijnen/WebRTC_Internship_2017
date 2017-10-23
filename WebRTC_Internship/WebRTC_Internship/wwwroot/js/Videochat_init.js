@@ -52,11 +52,10 @@ function start(isCaller) {
 
 function gotMessageFromServer(message) {
 	if (!peerConnection) start(false);
-
 	var signal = JSON.parse(message.data);
-
 	// Ignore messages from ourself
 	if (signal.clientuuid == clientuuid) return;
+	if (signal.uuid != uuid) console.log("Wrong chat send..."); return; 
 
 	if (signal.sdp) {
 		peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(function () {
@@ -97,7 +96,6 @@ function uuid() {
 	function s4() {
 		return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
 	}
-
 	return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
 }
 

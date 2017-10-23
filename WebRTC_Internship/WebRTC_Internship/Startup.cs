@@ -41,6 +41,11 @@ namespace WebRTC_Internship
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
+            //(config =>
+            //{
+            //    config.SignIn.RequireConfirmedEmail = true;
+            //})
+
             // Add application services.
             services.AddTransient<IEmailSender, EmailSender>();
 
