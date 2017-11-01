@@ -44,7 +44,7 @@ function start(isCaller) {
 	peerConnection.onicecandidate = gotIceCandidate;
 	peerConnection.onaddstream = gotRemoteStream;
 	peerConnection.addStream(localStream);
-
+    console.log("reached here");
 	if (isCaller) {
 		peerConnection.createOffer().then(createdDescription).catch(errorHandler);
 	}
@@ -55,7 +55,9 @@ function gotMessageFromServer(message) {
 	var signal = JSON.parse(message.data);
 	// Ignore messages from ourself
 	if (signal.clientuuid == clientuuid) return;
-	if (signal.uuid != uuid) console.log("Wrong chat send..."); return; 
+    if (signal.uuid != uuid) { console.log("Wrong chat send..."); return; }
+
+    console.log("reached the other side...");
 
 	if (signal.sdp) {
 		peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(function () {
