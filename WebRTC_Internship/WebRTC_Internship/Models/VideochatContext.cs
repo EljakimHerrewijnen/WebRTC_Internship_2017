@@ -12,8 +12,6 @@ namespace WebRTC_Internship.Models
             : base(options)
         {
         }
-
         public DbSet<Videochat> Videochats { get; set; }
-
     }
 }
