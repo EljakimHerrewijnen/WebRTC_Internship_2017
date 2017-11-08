@@ -14,22 +14,19 @@ namespace WebRTC_Internship.Controllers
     [Route("api/[controller]/")]
     public class VideochatController : Controller
     {
+        private VideochatContext db = new VideochatContext(null);
         // GET: api/videochat
         [HttpGet]
         public IActionResult Videochat()
         {
             return View();
+            //Videochat videochat = db.Videochats.Find(1);
         }
 
         [HttpGet("start_chat")]
         public IActionResult Start_chat()
         {
-            while (true)
-            {
-                string uuid = Guid.NewGuid().ToString();
-                break;
-                //foreach(var chat in )                {                }
-            }
+            string uuid = Guid.NewGuid().ToString();
             return this.Ok(new Models.Videochat { UUID = "123", Start = DateTime.Now, End = DateTime.Now });
         }
 

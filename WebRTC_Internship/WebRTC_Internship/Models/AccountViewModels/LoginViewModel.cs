@@ -12,8 +12,8 @@ namespace WebRTC_Internship.Models.AccountViewModels
         [EmailAddress]
         public string Email { get; set; }
 
-        [Required]
-        public string Username { get; set; }
+        //[Required]
+        //public string Username { get; set; }
 
         [Required]
         [DataType(DataType.Password)]

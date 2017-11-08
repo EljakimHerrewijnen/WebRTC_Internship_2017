@@ -8,10 +8,9 @@ namespace WebRTC_Internship.Models
 {
     public class VideochatContext : DbContext
     {
-        public VideochatContext(DbContextOptions<VideochatContext> options)
-            : base(options)
-        {
-        }
+        public VideochatContext(DbContextOptions<VideochatContext> context)
+            : base(context)
+        {  }
         public DbSet<Videochat> Videochats { get; set; }
     }
 }
