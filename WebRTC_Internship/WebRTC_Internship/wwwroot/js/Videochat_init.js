@@ -54,6 +54,10 @@ function start(isCaller) {
 	}
 }
 
+function getstate() {
+    console.log(peerConnection.iceConnectionState);
+}
+
 function gotMessageFromServer(message) {
 	if (!peerConnection) start(false);
 	var signal = JSON.parse(message.data);

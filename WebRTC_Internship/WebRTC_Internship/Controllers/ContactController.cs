@@ -16,7 +16,16 @@ namespace WebRTC_Internship.Controllers
         {
             return View();
         }
+        public IActionResult Home()
+        {
+            return View();
+        }
         public IActionResult Addcontact()
+        {
+            return View();
+        }
+
+        public IActionResult Personal()
         {
             return View();
         }

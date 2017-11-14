@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using WebRTC_Internship.Models;
+using WebRTC_Internship.Models.AccountViewModels;
 
 namespace WebRTC_Internship.Data
 {
@@ -22,5 +23,9 @@ namespace WebRTC_Internship.Data
             // For example, you can rename the ASP.NET Identity table names and more.
             // Add your customizations after calling base.OnModelCreating(builder);
         }
+
+        public DbSet<WebRTC_Internship.Models.AccountViewModels.ContactViewModel> ContactViewModel { get; set; }
+
+        public DbSet<WebRTC_Internship.Models.AccountViewModels.ContactModel> ContactModel { get; set; }
     }
 }
