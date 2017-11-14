@@ -40,9 +40,13 @@ function getUserMediaSuccess(stream) {
 
 function start(isCaller) {
 	console.log("Starting chat!");
-	peerConnection = new RTCPeerConnection(peerConnectionConfig);
-	peerConnection.onicecandidate = gotIceCandidate;
-	peerConnection.onaddstream = gotRemoteStream;
+    peerConnection = new RTCPeerConnection(peerConnectionConfig);
+    peerConnection.onicecandidate = gotIceCandidate;
+    var state = peerConnection.iceConnectionState
+    peerConnection.onaddstream = gotRemoteStream;
+    peerConnection.oniceconnectionstatechange = function () {
+        console.log('ICE State: ', state);
+    }
 	peerConnection.addStream(localStream);
     console.log("reached here");
 	if (isCaller) {

@@ -32,10 +32,11 @@ namespace WebRTC_Internship
             {
                 options.Filters.Add(new RequireHttpsAttribute());
             });
-
-            services.AddDbContext<VideochatContext>(opt => opt.UseInMemoryDatabase("Videochat"));
+            
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<secondcontext>(options =>
+                options.UseSqlServer(Configuration.GetConnectionString("Videochat")));
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()

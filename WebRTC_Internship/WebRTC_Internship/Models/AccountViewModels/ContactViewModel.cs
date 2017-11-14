@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,5 +23,10 @@ namespace WebRTC_Internship.Models.AccountViewModels
     public class ContactViewModel : ContactModel
     {
         public string Profilepicture { get; set; }
+    }
+
+    public class ContactDBContext : DbContext
+    {
+        public DbSet<ContactModel> Contact { get; set; }
     }
 }

@@ -24,8 +24,7 @@ namespace WebRTC_Internship.Controllers
         [HttpGet("{contactid}")]
         public IActionResult Callcontact()
         {
-            Response.Redirect("www.nu.nl");
-            return null;
+            return Redirect("www.nu.nl");
         }
 
         [HttpGet("{contactid}")]

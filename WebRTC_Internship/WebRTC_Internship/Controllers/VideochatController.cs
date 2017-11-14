@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using WebRTC_Internship.Models;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -14,7 +15,8 @@ namespace WebRTC_Internship.Controllers
     [Route("api/[controller]/")]
     public class VideochatController : Controller
     {
-        private VideochatContext db = new VideochatContext(null);
+        DbContextOptionsBuilder optionsBuilder = new DbContextOptionsBuilder<secondcontext>();
+        VideochatDBContext db = new VideochatDBContext();
         // GET: api/videochat
         [HttpGet]
         public IActionResult Videochat()
@@ -22,27 +24,33 @@ namespace WebRTC_Internship.Controllers
             return View();
             //Videochat videochat = db.Videochats.Find(1);
         }
-
+        
         [HttpGet("start_chat")]
         public IActionResult Start_chat()
         {
             string uuid = Guid.NewGuid().ToString();
-            return this.Ok(new Models.Videochat { UUID = "123", Start = DateTime.Now, End = DateTime.Now });
+            var videochat =  new Models.Videochat { UUID = "123", Start = DateTime.Now, End = DateTime.Now };
+            foreach(Videochat video in db.Videochat)
+            {
+                Console.WriteLine(video.ToString());
+            }
+            //second.Videochat.Add(videochat);
+            db.Add(videochat);
+            db.SaveChanges();
+            db.Videochat.Add(videochat);
+            if (ModelState.IsValid)
+            {
+            }
+            return Redirect("/api/videochat/" + uuid);
         }
 
         [RequireHttps]
         [HttpGet("{uuid}")]
-        //GET api/videochat/5
-        //public string getuuid(int uuid)
-        //{
-        //    return uuid.ToString();
-        //}
         public IActionResult Join_chat(string uuid)
         {
             return View();
         }
         
-
         // POST api/videochat
         [HttpPost]
         public void Post([FromBody]string value)
