@@ -35,8 +35,9 @@ namespace WebRTC_Internship
             
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
-            services.AddDbContext<secondcontext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("Videochat")));
+
+            //services.AddDbContext<VideochatDBContext>(options => options.UseSqlite("Data Source=Videochat.db"));
+            services.AddDbContext<VideochatDBContext>();
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()

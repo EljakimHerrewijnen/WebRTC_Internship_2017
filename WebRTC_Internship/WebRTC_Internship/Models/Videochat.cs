@@ -2,12 +2,14 @@
 using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace WebRTC_Internship.Models
 {
-    public class Videochat
+    public class VideochatModel
     {
         public long ID { get; set; }
         public string UUID { get; set; }
@@ -17,19 +19,12 @@ namespace WebRTC_Internship.Models
 
     public class VideochatDBContext : DbContext
     {
-        public DbSet<Videochat> Videochat { get; set; }
+        public DbSet<VideochatModel> Videochat { get; set; }
+        public DbSet<ContactModel> Contact { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlite("Data Source=Videochat.db");
         }
-    }
-
-    public class secondcontext : DbContext
-    {
-        public DbSet<Videochat> Videochat { get; set; }
-        public secondcontext(DbContextOptions<secondcontext> options)
-            : base(options)
-        { }
     }
 }

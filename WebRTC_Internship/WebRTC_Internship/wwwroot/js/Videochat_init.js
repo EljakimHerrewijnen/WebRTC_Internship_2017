@@ -62,15 +62,15 @@ function gotMessageFromServer(message) {
 	if (!peerConnection) start(false);
 	var signal = JSON.parse(message.data);
 	// Ignore messages from ourself
-	if (signal.clientuuid == clientuuid) return;
-    if (signal.uuid != uuid) { console.log("Wrong chat send..."); return; }
+	if (signal.clientuuid === clientuuid) return;
+    if (signal.uuid !== uuid) { console.log("Wrong chat send..."); return; }
 
     console.log("reached the other side...");
 
 	if (signal.sdp) {
 		peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(function () {
 			// Only create answers in response to offers
-			if (signal.sdp.type == 'offer') {
+			if (signal.sdp.type === 'offer') {
 				peerConnection.createAnswer().then(createdDescription).catch(errorHandler);
 			}
 		}).catch(errorHandler);
@@ -80,7 +80,7 @@ function gotMessageFromServer(message) {
 }
 
 function gotIceCandidate(event) {
-	if (event.candidate != null) {
+	if (event.candidate !== null) {
 		serverConnection.send(JSON.stringify({ 'ice': event.candidate, 'uuid': uuid, 'clientuuid': clientuuid }));
 	}
 }
@@ -100,28 +100,10 @@ function errorHandler(error) {
 	console.log(error);
 }
 
-// Taken from http://stackoverflow.com/a/105074/515584
-// Strictly speaking, it's not a real UUID, but it gets the job done here
+//Got this function from stackoverflow: https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript/21963136
 function uuid() {
     return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
         (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
     )
 }
-
-	/*
-	if(sessid != rtcid) {
-	  sessionStorage.setItem('chatid',rtcid);
-	  console.log("SessionID: " + sessid)
-	} else {
-	  console.log("Equal")
-	  window.location="/";
-	}
-	*/
-
-	// Update database with Waiting status
-	//var data = { 'uuid': rtcid, 'status': 'Waiting', 'csrfmiddlewaretoken': csrftoken };
-	//var args = { type: "POST", dataType: 'json', url: "/update_status/", data: data };
-	//$.post("/update_status/", data, function (data) {
-	//	console.log(data);
-	//});
 

@@ -11,6 +11,7 @@ namespace WebRTC_Internship.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
+        //public ApplicationDbContext() : base("DefaultConnection") { }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
@@ -24,8 +25,6 @@ namespace WebRTC_Internship.Data
             // Add your customizations after calling base.OnModelCreating(builder);
         }
 
-        public DbSet<WebRTC_Internship.Models.AccountViewModels.ContactViewModel> ContactViewModel { get; set; }
-
-        public DbSet<WebRTC_Internship.Models.AccountViewModels.ContactModel> ContactModel { get; set; }
+        public DbSet<WebRTC_Internship.Models.ContactModel> ContactModel { get; set; }
     }
 }

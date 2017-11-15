@@ -15,7 +15,6 @@ namespace WebRTC_Internship.Controllers
     [Route("api/[controller]/")]
     public class VideochatController : Controller
     {
-        DbContextOptionsBuilder optionsBuilder = new DbContextOptionsBuilder<secondcontext>();
         VideochatDBContext db = new VideochatDBContext();
         // GET: api/videochat
         [HttpGet]
@@ -29,18 +28,7 @@ namespace WebRTC_Internship.Controllers
         public IActionResult Start_chat()
         {
             string uuid = Guid.NewGuid().ToString();
-            var videochat =  new Models.Videochat { UUID = "123", Start = DateTime.Now, End = DateTime.Now };
-            foreach(Videochat video in db.Videochat)
-            {
-                Console.WriteLine(video.ToString());
-            }
             //second.Videochat.Add(videochat);
-            db.Add(videochat);
-            db.SaveChanges();
-            db.Videochat.Add(videochat);
-            if (ModelState.IsValid)
-            {
-            }
             return Redirect("/api/videochat/" + uuid);
         }
 
