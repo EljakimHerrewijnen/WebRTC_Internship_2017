@@ -35,6 +35,7 @@ httpsServer.listen(HTTPS_PORT, '0.0.0.0');
 // Real server for calls
 var wss = new WebSocketServer({server: httpsServer});
 var chatrooms = [];
+var clientlist = [];
 
 wss.on('connection', function(ws){
     console.log('new connection ');
@@ -42,6 +43,7 @@ wss.on('connection', function(ws){
         var obj = JSON.parse(message);
         var uuid = obj['uuid'];
         var clientuuid = obj['clientuuid']
+        clientlist += clientuuid;
         console.log("Client uuid == %s" + obj['clientuuid']);
         wss.joinRoom(uuid, message, clientuuid);
         //wss.broadcast(message);
@@ -79,7 +81,6 @@ wss.senddata = function(uuid, data, clientuuid){
         }
     })
 }
-
 // wss.broadcast = function(data) {
 //     console.log("broadcasting");
 //     this.clients.forEach(function(client) {

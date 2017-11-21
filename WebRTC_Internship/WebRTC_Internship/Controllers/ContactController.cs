@@ -8,6 +8,9 @@ using WebRTC_Internship.Models;
 using System.Web;
 using WebRTC_Internship.Data;
 using Microsoft.AspNetCore.Identity;
+using WebRTC_Internship.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 
 namespace WebRTC_Internship.Controllers
 {
@@ -16,29 +19,72 @@ namespace WebRTC_Internship.Controllers
     [Route("/api/[controller]/[action]")]
     public class ContactController : Controller
     {
-        private readonly UserManager<ApplicationUser> _userManager;
+        //Define managers
+        private UserManager<ApplicationUser> _userManager;
+        private SignInManager<ApplicationUser> _signInManager;
+        private IEmailSender _emailSender;
+        private ILogger _logger;
+
+        public ContactController(
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
+            IEmailSender emailSender,
+            ILogger<AccountController> logger)
+        {
+            _userManager = userManager;
+            _signInManager = signInManager;
+            _emailSender = emailSender;
+            _logger = logger;
+        }
+
+        //Connect to Contacts database
         VideochatDBContext db = new VideochatDBContext();
+
         public IActionResult Contact()
         {
             return Redirect("https://www.herreweb.nl/api/Contact/Home");
         }
+
         public IActionResult Home()
         {
             return View();
         }
 
+        public async Task<String> getcontacts()
+        {
+            string id = _userManager.GetUserId(User);
+            var contacts = db.Contact.Where(b => b.User_ID == id);
+            //ContactModel contacts = await db.Contact.Where(b => b.User_ID == id);
+            return contacts.ToString();
+        }
+
         [HttpGet("{username}")]
         public async Task<IActionResult> Addcontact(string username)
         {
+            string name = User.Identity.Name;
+            string id = _userManager.GetUserId(User);
             var user = await _userManager.FindByNameAsync(username);
-            return Content(user.Id.ToString());
-            //var local = ApplicationDbContext;
-            //foreach()
-        }
-
-        public IActionResult Personal()
-        {
-            return View();
+            if (user != null && id != null)
+            {
+                ContactModel contact = new ContactModel();
+                contact.User_ID = id;
+                contact.UUID = user.Id;
+                contact.Status = ContactStatus.Submitted;
+                contact.Email = user.Email;
+                contact.Name = user.UserName;
+                contact.ContactUUID = id + user.Id;
+                if (ModelState.IsValid)
+                {
+                    db.Contact.Add(contact);
+                    db.SaveChanges();
+                    return Content("200");
+                }
+                else
+                {
+                    return Content("400");
+                }
+            }
+            return Content("401");
         }
 
         [HttpGet("{contactid}")]

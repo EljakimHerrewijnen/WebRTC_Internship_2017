@@ -10,6 +10,8 @@ namespace WebRTC_Internship.Models
     {
         public string User_ID { get; set; }
         public string Name { get; set; }
+
+        [EmailAddress]
         public string Email { get; set; }
         public ContactStatus Status { get; set; }
         public string UUID { get; set; }
