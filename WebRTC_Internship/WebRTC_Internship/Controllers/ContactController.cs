@@ -50,12 +50,17 @@ namespace WebRTC_Internship.Controllers
             return View();
         }
 
-        public async Task<String> getcontacts()
+        public String getcontacts()
         {
             string id = _userManager.GetUserId(User);
-            var contacts = db.Contact.Where(b => b.User_ID == id);
+            var contacts = db.Contact.Where<ContactModel>(b => b.User_ID == id);
+            string returnstring = "";
+            foreach(var item in contacts)
+            {
+                returnstring += item.Name + ";" + item.UUID + "|";
+            }
             //ContactModel contacts = await db.Contact.Where(b => b.User_ID == id);
-            return contacts.ToString();
+            return returnstring;
         }
 
         [HttpGet("{username}")]

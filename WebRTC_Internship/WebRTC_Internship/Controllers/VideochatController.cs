@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 namespace WebRTC_Internship.Controllers
 {
     [RequireHttps]
-    [Route("api/[controller]/[action]")]
+    [Route("api/[controller]")]
     public class VideochatController : Controller
     {
         VideochatDBContext db = new VideochatDBContext();
@@ -38,14 +38,14 @@ namespace WebRTC_Internship.Controllers
         {
             return View();
         }
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get_Chat(long id)
-        {
-            VideochatModel item = await db.Videochat.FindAsync(id);
-            return Content(item.UUID.ToString());
-            //return item.UUID.ToString();
-        }
-        
+        //[HttpGet("{id}")]
+        //public async Task<IActionResult> Get_Chat(long id)
+        //{
+        //    VideochatModel item = await db.Videochat.FindAsync(id);
+        //    return Content(item.UUID.ToString());
+        //    //return item.UUID.ToString();
+        //}
+
         // POST api/videochat
         [HttpPost]
         public void Post([FromBody]string value)
