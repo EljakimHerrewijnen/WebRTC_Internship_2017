@@ -40,6 +40,13 @@ namespace WebRTC_Internship.Controllers
         //Connect to Contacts database
         VideochatDBContext db = new VideochatDBContext();
 
+        public String getcurrentuser()
+        {
+            string returnstring = "";
+            returnstring += _userManager.GetUserId(User);
+            return returnstring;
+        }
+
         public IActionResult Contact()
         {
             return Redirect("https://www.herreweb.nl/api/Contact/Home");
@@ -59,7 +66,6 @@ namespace WebRTC_Internship.Controllers
             {
                 returnstring += item.Name + ";" + item.UUID + "|";
             }
-            //ContactModel contacts = await db.Contact.Where(b => b.User_ID == id);
             return returnstring;
         }
 
@@ -90,12 +96,6 @@ namespace WebRTC_Internship.Controllers
                 }
             }
             return Content("401");
-        }
-
-        [HttpGet("{contactid}")]
-        public IActionResult Callcontact()
-        {
-            return Redirect("www.nu.nl");
         }
 
         [HttpGet("{contactid}")]
