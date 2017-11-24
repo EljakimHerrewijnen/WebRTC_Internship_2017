@@ -55,7 +55,7 @@ function start(isCaller) {
 }
 
 function getstate() {
-    console.log(peerConnection.iceConnectionState);
+    console.log("ICE State: ",peerConnection.iceConnectionState);
 }
 
 function gotMessageFromServer(message) {
@@ -97,7 +97,7 @@ function gotRemoteStream(event) {
 }
 
 function errorHandler(error) {
-	console.log(error);
+	console.log("Error",error);
 }
 
 //Got this function from stackoverflow: https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript/21963136

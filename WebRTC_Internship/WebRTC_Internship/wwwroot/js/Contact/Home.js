@@ -1,6 +1,7 @@
 ﻿var localVideo;
 var remoteVideo;
 var peerConnection;
+
 var uuid;
 var clientuuid;
 
@@ -17,14 +18,15 @@ function CreateChat() {
 
 function VIDEO_Connection() {
     console.log("Location :: " + window.location.hostname);
-    serverConnection = new WebSocket('wss://' + window.location.hostname + ':8443');
+    serverConnection = new WebSocket('wss://www.herreweb.nl:8443');// + window.location.hostname + ':8443');
     console.log("Connected to server");
     serverConnection.onmessage = gotMessageFromServer;
 }
 
 //After sending call or answered call
 function VIDEO_Setup() {
-    //clientuuid = uuid();
+    uuid = $.ajax({ type: "GET", url: "/api/videochat/generate_chat", async: false }).responseText;
+    console.log(uuid);
     //uuid = window.location.href.split('/').pop();
     localVideo = document.getElementById('localVideo');
     remoteVideo = document.getElementById('remoteVideo');
@@ -65,10 +67,13 @@ function getstate() {
 }
 
 function gotMessageFromServer(message) {
+    console.log(uuid);
     if (!peerConnection) start(false);
     var signal = JSON.parse(message.data);
     // Ignore messages from ourself
     if (signal.clientuuid === clientuuid) return;
+    console.log("this uuid: ", uuid);
+    console.log("remote uuid:", signal.uuid);
     if (signal.uuid !== uuid) { console.log("Wrong chat send..."); return; }
 
     console.log("reached the other side...");
@@ -87,13 +92,14 @@ function gotMessageFromServer(message) {
 
 function gotIceCandidate(event) {
     if (event.candidate !== null) {
-        serverConnection.send(JSON.stringify({ 'ice': event.candidate, 'uuid': uuid, 'clientuuid': this.clientuuid }));
+        console.log(uuid);
+        serverConnection.send(JSON.stringify({ 'ice': event.candidate, 'uuid': uuid, 'clientuuid': clientuuid }));
     }
 }
 
 function createdDescription(description) {
     peerConnection.setLocalDescription(description).then(function () {
-        serverConnection.send(JSON.stringify({ 'sdp': peerConnection.localDescription, 'uuid': uuid, 'clientuuid': this.clientuuid }));
+        serverConnection.send(JSON.stringify({ 'sdp': peerConnection.localDescription, 'uuid': uuid, 'clientuuid': clientuuid }));
     }).catch(errorHandler);
 }
 
@@ -114,11 +120,10 @@ function createuuid() {
 }
 
 function pageReady() {
-    this.clientuuid = $.ajax({ type: "GET", url: "/api/contact/getcurrentuser", async: false }).responseText;
-    console.log(this.uuid);
+    clientuuid = $.ajax({ type: "GET", url: "/api/contact/getcurrentuser", async: false }).responseText;
     CONTACT_getcontacts();
     VIDEO_Setup();
-    //Video_setup();
+    VIDEO_Connection();
 }
 
 $(document).ready(function () {
@@ -149,19 +154,19 @@ function CONTACT_loadcontacts(data) {
     }
 }
 
-
 //Obscure function for creating clickable picture elements.
-function CONTACT_CreateImageObject(uuid, alt, height, width) {
+function CONTACT_CreateImageObject(contactuuid, alt, height, width) {
     var element = document.createElement("div");
-    element.id = uuid;
-    var calluuid = "'" + uuid + "'";
+    element.id = contactuuid;
+    var calluuid = "'" + contactuuid + "'";
     var defaultimage = '"../../images/contacts/default.jpg"';
-    var HTML = '<img src="../../images/contacts/' + uuid + '.jpg" onerror=this.src=' + defaultimage + ' alt="' + alt + '" height="' + height + '" width="' + width + '" onclick="VIDEOCHAT_Call(' + calluuid + ')' + '">';
+    var HTML = '<img src="../../images/contacts/' + contactuuid + '.jpg" onerror=this.src=' + defaultimage + ' alt="' + alt + '" height="' + height + '" width="' + width + '" onclick="VIDEOCHAT_Call(' + calluuid + ')' + '">';
     element.innerHTML = HTML;
     var x = document.getElementById("Contacts-list-container");
     x.appendChild(element);
 }
 
-function VIDEOCHAT_Call(uuid) {
-    console.log(uuid);
+function VIDEOCHAT_Call(contactuuid) {
+    console.log("Contact uuid: ",contactuuid);
+    start(true);
 }

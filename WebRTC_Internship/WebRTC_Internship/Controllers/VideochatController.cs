@@ -23,7 +23,14 @@ namespace WebRTC_Internship.Controllers
             return View();
             //Videochat videochat = db.Videochats.Find(1);
         }
-        
+
+        [HttpGet("generate_chat")]
+        public String generate_chat()
+        {
+            string uuid = Guid.NewGuid().ToString();
+            return uuid;
+        }
+
         [HttpGet("start_chat")]
         public IActionResult Start_chat()
         {
@@ -38,13 +45,6 @@ namespace WebRTC_Internship.Controllers
         {
             return View();
         }
-        //[HttpGet("{id}")]
-        //public async Task<IActionResult> Get_Chat(long id)
-        //{
-        //    VideochatModel item = await db.Videochat.FindAsync(id);
-        //    return Content(item.UUID.ToString());
-        //    //return item.UUID.ToString();
-        //}
 
         // POST api/videochat
         [HttpPost]
