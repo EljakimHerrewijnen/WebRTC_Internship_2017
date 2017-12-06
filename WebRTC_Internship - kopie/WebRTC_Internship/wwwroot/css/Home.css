@@ -1,0 +1,12 @@
+﻿body {
+}
+
+.ContactImage{
+    border: 8px solid gray;
+    padding: 1px;
+    vertical-align:top;
+    float:left;
+    -webkit-border-image: url(border.png) 50 round; /* Safari 3.1-5 */
+    -o-border-image: url(border.png) 50 round; /* Opera 11-12.1 */
+    border-image: url(border.png) 50 round;
+}

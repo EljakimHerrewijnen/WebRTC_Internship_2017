@@ -1,0 +1,37 @@
+﻿@model WebRTC_Internship.Models.VideochatModel
+@{
+    ViewData["Title"] = "Videochat";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script src="https://simplewebrtc.com/latest-v2.js"></script>
+    <script src="~/js/Videochat_init.js"></script>
+    <style>
+        #remoteVideo video {
+            height: 150px;
+        }
+
+        #localVideo {
+            height: 150px;
+        }
+    </style>
+</head>
+
+<body>
+    <video id="localVideo" autoplay muted style="width:40%;"></video>
+    <video id="remoteVideo" autoplay style="width:40%;"></video>
+    <input type="button" id="start" onclick="start(true)" value="Start Video"></input>
+    <input type="button" id="getstate" onclick="getstate()" value="Check state"></input>
+    <script type="text/javascript">
+        pageReady();
+    </script>
+</body>
+</html>
+
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

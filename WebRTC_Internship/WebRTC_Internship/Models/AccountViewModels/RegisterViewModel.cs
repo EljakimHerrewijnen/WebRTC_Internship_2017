@@ -14,7 +14,7 @@ namespace WebRTC_Internship.Models.AccountViewModels
         public string Email { get; set; }
 
         [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [StringLength(100, ErrorMessage = "Must have at least 4 characters", MinimumLength = 4)]
         [Display(Name = "Username")]
         public string Username { get; set; }
 
