@@ -22,10 +22,11 @@ var peerConnectionConfig = {
     ]
 };
 
+
+//Internals for RTC Peer and VIDEO chat
 function getUserMediaSuccess(stream) {
     localStream = stream;
     localVideo.src = window.URL.createObjectURL(stream);
-    console.log("done");
 }
 
 function loadVideos() {
@@ -38,11 +39,10 @@ function loadVideos() {
     } else {
         alert('Your browser does not support getUserMedia API');
     }
-    console.log("done");
 }
 
 function gotIceCandidate(event) {
-    if (event.candidate != null) {
+    if (event.candidate !== null) {
         serverConnection.send(JSON.stringify({ 'ice': event.candidate, 'uuid': uuid, 'clientuuid': useruuid }));
     }
 }
@@ -62,47 +62,10 @@ function errorHandler(error) {
     console.log(error);
 }
 
-// Taken from http://stackoverflow.com/a/105074/515584
-function uuid() {
-    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
-        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-    )
-}
-
-function receiveCall(chatuuid, hostuuid) {
-    //alert()
-    uuid = chatuuid;
-    loadVideos()
-    setTimeout(function () { start(calling); }, 2000); 
-}
-
-//CUSTOM
-function start(isCaller) {
-    console.log("Starting chat!");
-    peerConnection = new RTCPeerConnection(peerConnectionConfig);
-    peerConnection.onicecandidate = gotIceCandidate;
-    peerConnection.onaddstream = gotRemoteStream;
-    peerConnection.addStream(localStream);
-    console.log("reached here");
-    if (isCaller) {
-        peerConnection.createOffer().then(createdDescription).catch(errorHandler);
-    }
-    loadedrtc = true;
-}
-
-function sendvideo(calling) {
-    peerConnection.onicecandidate = gotIceCandidate;
-    peerConnection.onaddstream = gotRemoteStream;
-    peerConnection.addStream(localStream);
-    if (calling) {
-        peerConnection.createOffer().then(createdDescription).catch(errorHandler);
-    }
-}
-
 function gotMessageFromServer(message) {
     var signal = JSON.parse(message.data);
     if (!peerConnection) { receiveCall(signal.uuid, signal.clientuuid); }
-    if (!loadedrtc) { return;}
+
     // Ignore messages from ourself
     if (signal.clientuuid === useruuid) { return; }
     if (signal.uuid !== uuid) { console.log("Wrong chat send..."); return; }
@@ -110,7 +73,7 @@ function gotMessageFromServer(message) {
     if (signal.sdp) {
         peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(function () {
             // Only create answers in response to offers
-            if (signal.sdp.type == 'offer') {
+            if (signal.sdp.type === 'offer') {
                 peerConnection.createAnswer().then(createdDescription).catch(errorHandler);
             }
         }).catch(errorHandler);
@@ -120,31 +83,37 @@ function gotMessageFromServer(message) {
 }
 
 
+//Toolset
+// Taken from http://stackoverflow.com/a/105074/515584
+function uuid() {
+    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    )
+}
 
+function stoptracks() {
+    localStream.getTracks().forEach(function (track) {
+        track.stop();
+    })
+}
 
+function resetbody() {
+    try {
+        stoptracks();
+    }
+    catch (err){ };
+    var element = document.getElementById("Contacts-list-container");
+    element.innerHTML = "";
+}
 
 function pageReady() {
     useruuid = $.ajax({ type: "GET", url: "/api/contact/getcurrentuser", async: false }).responseText;
     uuid = $.ajax({ type: "GET", url: "/api/videochat/generate_chat", async: false }).responseText;
     while (useruuid === null) { }
-    CONTACT_getcontacts();
-    localVideo = document.getElementById('localVideo');
-    remoteVideo = document.getElementById('remoteVideo');
-
-    serverConnection = new WebSocket('wss://www.herreweb.nl:8443'); ///+ window.location.hostname + ':8443');
+    loadcontactspage();
+    serverConnection = new WebSocket('wss://www.herreweb.nl:8443');        //wss://www.herreweb.nl:8443'); ///+ window.location.hostname + ':8443');
     serverConnection.onmessage = gotMessageFromServer;
-
-    loadVideos();
     pageloaded = true;
-
-    if (loadedrtc) {
-        peerConnection.onicecandidate = gotIceCandidate;
-        peerConnection.onaddstream = gotRemoteStream;
-        peerConnection.addStream(localStream);
-        if (calling) {
-            peerConnection.createOffer().then(createdDescription).catch(errorHandler);
-        }
-    }
 }
 
 $(document).ready(function () {
@@ -152,7 +121,44 @@ $(document).ready(function () {
 });
 
 
+//VIDEO Custom calls
+function init_videochat() {
+    var HTML = '<video id="localVideo" autoplay muted style="width: 40%;"></video> <video id= "remoteVideo" autoplay style= "width:40%;" ></video > <button id="CreateChat" onclick="start(true)">Create Chat!</button>';
+    var element = document.getElementById("Contacts-list-container");
+    element.innerHTML = HTML;
+    localVideo = document.getElementById('localVideo');
+    remoteVideo = document.getElementById('remoteVideo');
+    loadVideos();
+    setTimeout(function () { start(calling); }, 2000)
+}
 
+function receiveCall(chatuuid, hostuuid) {
+    //alert()
+    console.log("receiving call");
+    uuid = chatuuid;
+    init_videochat()
+    //setTimeout(function () { start(calling); }, 2000); 
+}
+
+function start(isCaller) {
+    console.log("Starting chat!");
+    peerConnection = new RTCPeerConnection(peerConnectionConfig);
+    peerConnection.onicecandidate = gotIceCandidate;
+    peerConnection.onaddstream = gotRemoteStream;
+    peerConnection.addStream(localStream);
+    console.log("reached here");
+    if (isCaller) {
+        console.log("iscaller == ", calling);
+        peerConnection.createOffer().then(createdDescription).catch(errorHandler);
+    }
+    loadedrtc = true;
+}
+
+
+//Contact functions
+function loadcontactspage() {
+    CONTACT_getcontacts();
+}
 
 //Sends ajax call to get contacts from currently logged in user. Backend checks user config.
 function CONTACT_getcontacts() {
@@ -192,9 +198,49 @@ function CONTACT_CreateImageContact(contactuuid, alt, height, width) {
 }
 
 function CONTACT_Call(calluuid) {
-    //loadVideos();
     calling = true;
-    //setTimeout(function () { start(calling); }, 2000)
-    setTimeout(function () { start(calling); }, 2000)
-    setTimeout(function () { start(calling); }, 6000)
+    init_videochat();
+    setTimeout(function () { start(calling) }, 4000);
+    setTimeout(function () { start(calling) }, 8000);
+}
+
+function CONTACT_sendinvite(uuid) {
+    console.log(uuid);
+}
+
+//Search users
+function SEARCH_view() {
+    resetbody();
+    var HTML = '<div id="SEARCH_contact"><input type="text" id="SEARCH_input" placeholder="Search.."><button id="SEARCH_button" onclick="SEARCH_action()">Search</button></div>';
+    var element = document.getElementById("Contacts-list-container");
+    element.innerHTML = HTML;
+}
+
+function SEARCH_action() {
+    var element2 = document.getElementById("SEARCH_input").value;
+    var returndata = $.ajax({ type: "GET", url: "/api/contact/search/" + element2, async: false }).responseText;
+    SEARCH_results(returndata);
+}
+
+function SEARCH_loadcontacts(contactuuid, alt, height, width) {
+    var element = document.createElement("div");
+    element.id = contactuuid;
+    var calluuid = "'" + contactuuid + "'";
+    var defaultimage = '"../../images/contacts/default.jpg"';
+    var HTML = '<img src="../../images/contacts/' + contactuuid + '.jpg" class="ContactImage" onerror=this.src=' + defaultimage + ' alt="' + alt + '"  height="' + height + '" width="' + width + '"><button id="' + calluuid + '" onclick="CONTACT_sendinvite(' + calluuid + ')">invite</button>';
+    console.log(HTML);
+    element.innerHTML = HTML;
+    var x = document.getElementById("Contacts-list-container");
+    x.appendChild(element);
+}
+
+function SEARCH_results(results) {
+    var contacts = results.split("|");
+    for (var i = 0; i < contacts.length; i++) {
+        if (contacts[i] != "") {
+            data = contacts[i].split(";");
+            var id = data[1]; //ID of user
+            SEARCH_loadcontacts(id, data[0], 276, 180);
+        }
+    }
 }

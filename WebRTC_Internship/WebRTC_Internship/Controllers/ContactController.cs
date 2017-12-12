@@ -38,8 +38,9 @@ namespace WebRTC_Internship.Controllers
         }
 
         //Connect to Contacts database
-        VideochatDBContext db = new VideochatDBContext();
+        private VideochatDBContext db = new VideochatDBContext();
 
+        //Gets current user
         public String getcurrentuser()
         {
             string returnstring = "";
@@ -114,10 +115,16 @@ namespace WebRTC_Internship.Controllers
         }
 
         [HttpGet("{searchquery}")]
-        public IActionResult Search(string searchquery)
+        public async Task<string> Search(string searchquery)
         {
-            string result = "";
-            return Content(result);
+            searchquery.ToLower();
+            var userlist = _userManager.Users.ToList();
+            string returnstring ="";
+            foreach(var item in userlist)
+            {
+                if (item.UserName.ToLower().Contains(searchquery)) { returnstring += item.UserName.ToString() + ";" + item.Id.ToString() +"|"; } 
+            }
+            return returnstring;
         }
     }
 }

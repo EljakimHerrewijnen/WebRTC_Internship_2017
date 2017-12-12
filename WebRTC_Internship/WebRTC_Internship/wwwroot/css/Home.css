@@ -2,7 +2,8 @@
 }
 
 .ContactImage{
-    border: 8px solid gray;
+    border: 20px solid gray;
+    margin: 2%;
     padding: 1px;
     vertical-align:top;
     float:left;
@@ -10,3 +11,55 @@
     -o-border-image: url(border.png) 50 round; /* Opera 11-12.1 */
     border-image: url(border.png) 50 round;
 }
+
+#Contacts-list-container{
+    margin-top:10px;
+    height: 1000px;
+    align-self: center;
+}
+
+#SEARCH_button {
+    float: right;
+    width: 90px;
+    height: 45px;
+    border: 0 none transparent;
+    padding: 0;
+    margin-bottom: 10px;
+}
+
+#SEARCH_viewbutton{
+    float: left;
+    width: 90px;
+    height: 45px;
+    border: 0 none transparent;
+    padding: 0;
+    margin: 10px;
+}
+
+#SEARCH_area {
+    width: 100px;
+    height:50px;
+    float: right;
+    margin: 10px;
+}
+
+#SEARCH_contact {
+    margin-top: 60px;
+    font-size: large;
+    float: left;
+    width: 100%;
+    -webkit-transition: width 0.3s;
+    -moz-transition: width 0.3s;
+    transition: width 0.3s;
+    -webkit-backface-visibility: hidden;
+}
+
+input[type=text] {
+    width: 90%;
+    transition: ease-in-out, width .35s ease-in-out;
+}
+
+#Search_buttoninvite{
+
+}
+

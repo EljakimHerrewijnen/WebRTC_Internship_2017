@@ -69,6 +69,12 @@ wss.Addclient = function(clientuuid, wss){
     clientlist2.push(temp);
 }
 
+// function dummy(){
+//     for(var i = 0; i < clientlist2.length; i++){
+//         clientlist2[i].wss.send()
+//     }
+// }
+
 wss.joinRoom = function(uuid, data, clientuuid){
     for(var i = 0; i < chatrooms.length; i++){
         if(chatrooms[i] == uuid){
