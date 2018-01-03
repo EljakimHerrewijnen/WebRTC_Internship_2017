@@ -1,7 +1,10 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace WebRTC_Internship.Models
@@ -13,7 +16,7 @@ namespace WebRTC_Internship.Models
 
         [EmailAddress]
         public string Email { get; set; }
-        public ContactStatus Status { get; set; }
+        public string Status { get; set; }
         public string UUID { get; set; }
 
         [Key]

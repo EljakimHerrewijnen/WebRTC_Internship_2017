@@ -17,6 +17,8 @@ var peerConnectionConfig = {
     ]
 };
 
+
+
 function pageReady() {
     clientuuid = uuid();
     uuid = window.location.href.split('/').pop();
@@ -123,4 +125,3 @@ function uuid() {
 	//$.post("/update_status/", data, function (data) {
 	//	console.log(data);
 	//});
-

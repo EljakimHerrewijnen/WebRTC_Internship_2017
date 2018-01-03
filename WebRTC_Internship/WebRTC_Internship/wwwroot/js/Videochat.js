@@ -10,6 +10,8 @@ var peerConnectionConfig = {
 	]
 };
 
+
+
 function pageReady() {
 	uuid = uuid();
 	localVideo = document.getElementById('localVideo');
@@ -99,4 +101,3 @@ function uuid() {
 
 	return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
 }
-

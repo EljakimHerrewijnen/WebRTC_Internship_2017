@@ -1,16 +1,12 @@
 ﻿var localVideo;
 var remoteVideo;
 var peerConnection;
-var uuid; //chat uuid
-var useruuid; //Current user uuid
-var onlineusers;
+var uuid;
+var useruuid;
 
 var calling = false;
 var pageloaded = false;
 var loadedrtc = false;
-var callaccepted = false;
-var answered = false;
-var remoteclient = 0;
 
 var peerConnectionConfig = {
     'iceServers': [
@@ -47,18 +43,14 @@ function loadVideos() {
 
 function gotIceCandidate(event) {
     if (event.candidate !== null) {
-        serverConnection.send(JSON.stringify({ 'ice': event.candidate, 'uuid': uuid, 'clientuuid': useruuid, 'remoteclient': remoteclient }));
+        serverConnection.send(JSON.stringify({ 'ice': event.candidate, 'uuid': uuid, 'clientuuid': useruuid }));
     }
 }
 
 function createdDescription(description) {
     peerConnection.setLocalDescription(description).then(function () {
-        serverConnection.send(JSON.stringify({ 'sdp': peerConnection.localDescription, 'uuid': uuid, 'clientuuid': useruuid, 'remoteclient': remoteclient }));
+        serverConnection.send(JSON.stringify({ 'sdp': peerConnection.localDescription, 'uuid': uuid, 'clientuuid': useruuid }));
     }).catch(errorHandler);
-}
-
-function checkonlineusers() {
-    serverConnection.send(JSON.stringify({ 'sdp': 'getonline', 'uuid': 0, 'clientuuid': useruuid, 'remoteclient': remoteclient }))
 }
 
 function gotRemoteStream(event) {
@@ -71,19 +63,16 @@ function errorHandler(error) {
 }
 
 function gotMessageFromServer(message) {
-    console.log("got message from server");
     var signal = JSON.parse(message.data);
     if (signal.function === "getonline") {
+        console.log(signal.userlist);
         onlineusers = signal.userlist;
-        CONTACT_getcontacts();
-        return;
     }
-    console.log("reached here")
-    //if (!peerConnection) { receiveCall(signal.uuid, signal.clientuuid); }
+    if (!peerConnection) { receiveCall(signal.uuid, signal.clientuuid); }
+
     // Ignore messages from ourself
     if (signal.clientuuid === useruuid) { return; }
-    //if (signal.uuid !== uuid) { console.log("Wrong chat send..."); return; }
-    if (!peerConnection) { receiveCall(signal.uuid, signal.clientuuid); }
+    if (signal.uuid !== uuid) { console.log("Wrong chat send..."); return; }
     console.log("passed checkers, loading chat...");
     if (signal.sdp) {
         peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(function () {
@@ -116,7 +105,7 @@ function resetbody() {
     try {
         stoptracks();
     }
-    catch (err) { };
+    catch (err){ };
     var element = document.getElementById("Contacts-list-container");
     element.innerHTML = "";
 }
@@ -124,11 +113,11 @@ function resetbody() {
 function pageReady() {
     serverConnection = new WebSocket('wss://www.herreweb.nl:8443');        //wss://www.herreweb.nl:8443'); ///+ window.location.hostname + ':8443');
     serverConnection.onmessage = gotMessageFromServer;
-    //CONTACT_CheckonlineUsers(contactslist)
+    CONTACT_CheckonlineUsers(contactslist)
     useruuid = $.ajax({ type: "GET", url: "/api/contact/getcurrentuser", async: false }).responseText;
     uuid = $.ajax({ type: "GET", url: "/api/videochat/generate_chat", async: false }).responseText;
     while (useruuid === null) { }
-    setTimeout(function () { checkonlineusers(); }, 750);
+    setTimeout(function () { loadcontactspage(); }, 2000);
     pageloaded = true;
 }
 
@@ -148,32 +137,9 @@ function init_videochat() {
     setTimeout(function () { start(calling); }, 2000)
 }
 
-
-
-var popupactive = false;
 function receiveCall(chatuuid, hostuuid) {
-    //Popup for accepting or rejecting calls
-    if (!answered) {
-        Incommingcall();
-    }
-    var modal = document.getElementById('myModal');
-    function check() {
-        if (answered) {
-            modal.style.display = "none";
-            return;
-        }
-        else {
-            setTimeout(function () { check(); }, 300)
-        }
-    }
-    if (!popupactive) {
-        popupactive = true;
-        check();
-    }
-    if (!callaccepted) {
-        return;
-    }
-
+    //alert()
+    console.log("receiving call");
     uuid = chatuuid;
     init_videochat()
     //setTimeout(function () { start(calling); }, 2000); 
@@ -205,6 +171,7 @@ function CONTACT_getcontacts() {
     $.get("/api/contact/getcontacts", function () {
     })
         .done(function (data) {
+            console.log(data);
             CONTACT_loadcontacts(data)
         })
         .fail(function () {
@@ -215,20 +182,22 @@ function CONTACT_getcontacts() {
 }
 
 function CONTACT_Checkonline(remoteuserid) {
+    console.log("user id: ", remoteuserid, onlineusers);
     console.log(onlineusers);
     var temp = onlineusers.split(";");
-    for (var i = 0; i < temp.length; i++) {
-        console.log("Checking current user: ", temp[i])
-        if (temp[i] === remoteuserid) {
+    for (var i = 0; i < onlineusers.length; i++){
+        if (onlineusers[i] === remoteuserid) {
             return true;
         }
     }
+    console.log("returning false")
     return false;
 }
 
 function CONTACT_loadcontacts(data) {
     var contacts = data.split("|");
     for (var i = 0; i < contacts.length; i++) {
+        console.log(contacts[i])
         if (contacts[i] != "") {
             data = contacts[i].split(";");
             var id = data[1]; //ID of user
@@ -242,6 +211,7 @@ function CONTACT_loadcontacts(data) {
 var createdparagraph = false;
 
 function CONTACT_CreateImageContact(contactuuid, alt, height, width, contactname, status, online) {
+    console.log("Is user online? :", online);
     var element = document.createElement("div");
     element.id = contactuuid;
     var calluuid = "'" + contactuuid + "'";
@@ -251,10 +221,10 @@ function CONTACT_CreateImageContact(contactuuid, alt, height, width, contactname
     if (status === "Approved") {
         HTML += '<div id="Contact_imagediv"><img id="CONTACT_image" src="../../images/contacts/' + contactuuid + '.jpg" class="ContactImage" onerror=this.src=' + defaultimage + ' alt="' + alt + '"  height="' + height + '" width="' + width + '" onclick="CONTACT_Call(' + calluuid + ')' + '">';
         if (online) {
-            var textarea = '<textarea id="CONTACT_textarea"> ' + contactname + ' is online</textarea></div>';
+            var textarea = '< textarea id= "CONTACT_textarea" > ' + contactname + ' is offline</textarea></div>';
         }
         else {
-            var textarea = '<textarea id="CONTACT_textarea"> ' + contactname + ' is offline</textarea></div>';
+            var textarea = '< textarea id= "CONTACT_textarea" > ' + contactname + ' is online</textarea></div>';
         }
         HTML += textarea;
     }
@@ -284,15 +254,10 @@ function CONTACT_acceptinvite(accept, contactuuid) {
 }
 
 function CONTACT_Call(calluuid) {
-    remoteclient = calluuid;
     calling = true;
     init_videochat();
-    for (var i = 0; i < 20; i++) {
-        console.log("calling...");
-        setTimeout(function () { start(calling) }, 4000);
-    }
-    //    setTimeout(function () { start(calling) }, 4000);
-    //    setTimeout(function () { start(calling) }, 8000);
+    setTimeout(function () { start(calling) }, 4000);
+    setTimeout(function () { start(calling) }, 8000);
 }
 
 function CONTACT_sendinvite(username) {
@@ -319,10 +284,10 @@ function SEARCH_loadcontacts(contactuuid, alt, height, width, contactname) {
     }
     var element = document.createElement("div");
     element.id = contactuuid;
-    var invitename = "'" + contactname + "'";
+    var invitename = "'" + contactname +  "'";
     var calluuid = "'" + contactuuid + "'";
     var defaultimage = '"../../images/contacts/default.jpg"';
-    var HTML = '<div id="SEARCH_imagediv"><img id="SEARCH_image" src="../../images/contacts/' + contactuuid + '.jpg" class="ContactImage" onerror=this.src=' + defaultimage + ' alt="' + alt + '"  height="' + height + '" width="' + width + '"><textarea id="SEARCH_textarea">' + contactname + '</textarea><button type="button" id="SEARCH_invitebutton" onclick="CONTACT_sendinvite(' + invitename + ')">Invite</button><button type="button" id="SEARCH_callbutton" onclick="CONTACT_Call(' + calluuid + ')">Call</button></div>'
+    var HTML = '<div id="SEARCH_imagediv"><img id="SEARCH_image" src="../../images/contacts/' + contactuuid + '.jpg" class="ContactImage" onerror=this.src=' + defaultimage + ' alt="' + alt + '"  height="' + height + '" width="' + width + '"><textarea id="SEARCH_textarea">' + contactname + '</textarea><button type="button" id="SEARCH_invitebutton" onclick="CONTACT_sendinvite(' + invitename + ')">Invite</button><button type="button" id="SEARCH_callbutton" onclick="CONTACT_Call(' + calluuid +')">Call</button></div>'
     //var HTML = '<img src="../../images/contacts/' + contactuuid + '.jpg" class="ContactImage" onerror=this.src=' + defaultimage + ' alt="' + alt + '"  height="' + height + '" width="' + width + '"><button id="' + calluuid + '" onclick="CONTACT_sendinvite(' + calluuid + ')">invite</button>';
     console.log(HTML);
     element.innerHTML = HTML;
@@ -339,41 +304,4 @@ function SEARCH_results(results) {
             SEARCH_loadcontacts(id, data[0], 276, 200, data[0]);
         }
     }
-}
-
-//CALL Settings and popup
-
-
-// Get the modal
-
-function PopupSetup() {
-    var modal = document.getElementById('myModal');
-    // Get the <span> element that closes the modal
-    var span = document.getElementsByClassName("close")[0];
-    // When the user clicks on <span> (x), close the modal
-    span.onclick = function () {
-        modal.style.display = "none";
-    }
-
-    // When the user clicks anywhere outside of the modal, close it
-    window.onclick = function (event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
-    }
-    modal.style.display = "block";
-}
-
-function CALL_Accepted() {
-    answered = true;
-    callaccepted = true;
-}
-
-function CALL_Rejected() {
-    answered = true;
-    callaccepted = false;
-}
-
-function Incommingcall() {
-    PopupSetup();
 }
