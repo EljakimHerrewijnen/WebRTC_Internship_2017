@@ -60,6 +60,28 @@ namespace WebRTC_Internship.Controllers
             return View();
         }
 
+        [HttpPost("UploadFiles")]
+        public async Task<IActionResult> Uploadfile(List<IFormFile> files)
+        {
+            //<==Code from ASP .NET Core official documentation==>
+            long size = files.Sum(f => f.Length);
+            string id = _userManager.GetUserId(User);
+            try
+            {
+                if (files[0].Length > 0)
+                {
+                    var stream = new FileStream(("wwwroot/images/contacts/" + id + ".jpg"), FileMode.Create);
+                    await files[0].CopyToAsync(stream);
+                }
+            }
+            catch
+            {
+                return Content("500");
+            }
+            return Redirect("/api/contact/home");
+            return Content("200");
+        }
+
         public async  Task<String> getcontacts()
         {
             string id = _userManager.GetUserId(User);
@@ -191,30 +213,7 @@ namespace WebRTC_Internship.Controllers
             return null;
         }
 
-        [HttpPost("UploadFiles")]
-        public async Task<IActionResult> UploadImage(List<IFormFile> files)
-        {
-            long size = files.Sum(f => f.Length);
 
-            // full path to file in temp location
-            var filePath = Path.GetTempFileName();
-
-            foreach (var formFile in files)
-            {
-                if (formFile.Length > 0)
-                {
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await formFile.CopyToAsync(stream);
-                    }
-                }
-            }
-
-            // process uploaded files
-            // Don't rely on or trust the FileName property without validation.
-
-            return Ok(new { count = files.Count, size, filePath });
-        }
 
     }
 }

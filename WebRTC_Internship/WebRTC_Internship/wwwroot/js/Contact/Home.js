@@ -11,12 +11,13 @@ var loadedrtc = false;
 var callaccepted = false;
 var answered = false;
 var remoteclient = 0;
+var remotecallaccept = false;
 
 var peerConnectionConfig = {
     'iceServers': [
         { 'urls': 'stun:stun.services.mozilla.com' },
         { 'urls': 'stun:stun.l.google.com:19302' },
-        { 'urls': 'stun:stun.l.google.com:19302' },
+        // { 'urls': 'turn:turn:52.232.119.53:3478', 'credential': 'yourpassword', 'username':'youruser' },
         { 'urls': 'stun:stun1.l.google.com:19302' },
         {
             'urls': 'turn:numb.viagenie.ca:3478',
@@ -36,7 +37,7 @@ function getUserMediaSuccess(stream) {
 function loadVideos() {
     var constraints = {
         video: true,
-        audio: true,
+        //audio: true,
     };
     if (navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia(constraints).then(getUserMediaSuccess).catch(errorHandler);
@@ -47,6 +48,7 @@ function loadVideos() {
 
 function gotIceCandidate(event) {
     if (event.candidate !== null) {
+        //console.log("Remoteclient ==", remoteclient)
         serverConnection.send(JSON.stringify({ 'ice': event.candidate, 'uuid': uuid, 'clientuuid': useruuid, 'remoteclient': remoteclient }));
     }
 }
@@ -62,7 +64,7 @@ function checkonlineusers() {
 }
 
 function gotRemoteStream(event) {
-    console.log('got remote stream');
+    console.log('got remote stream!!!!!!!!!!!');
     remoteVideo.src = window.URL.createObjectURL(event.stream);
 }
 
@@ -81,19 +83,25 @@ function gotMessageFromServer(message) {
     console.log("reached here")
     //if (!peerConnection) { receiveCall(signal.uuid, signal.clientuuid); }
     // Ignore messages from ourself
-    if (signal.clientuuid === useruuid) { return; }
+    // if (signal.clientuuid === useruuid) { return; }
     //if (signal.uuid !== uuid) { console.log("Wrong chat send..."); return; }
-    if (!peerConnection) { receiveCall(signal.uuid, signal.clientuuid); }
+    if (!peerConnection && !answered) { receiveCall(signal.uuid, signal.clientuuid); }
+    // if (!answered) { return; }
     console.log("passed checkers, loading chat...");
-    if (signal.sdp) {
+    if (signal.sdp || signal.function === "sdp") {
         peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(function () {
             // Only create answers in response to offers
-            if (signal.sdp.type === 'offer') {
+            if (signal.sdp.type == 'offer') {
+                console.log("OFFFFEEEER")
                 peerConnection.createAnswer().then(createdDescription).catch(errorHandler);
             }
         }).catch(errorHandler);
     } else if (signal.ice) {
+        console.log("IIICEEE")
         peerConnection.addIceCandidate(new RTCIceCandidate(signal.ice)).catch(errorHandler);
+    }
+    else {
+        console.log("Something else");
     }
 }
 
@@ -139,7 +147,7 @@ $(document).ready(function () {
 
 //VIDEO Custom calls
 function init_videochat() {
-    var HTML = '<video id="localVideo" autoplay muted style="width: 40%;"></video> <video id= "remoteVideo" autoplay style= "width:40%;" ></video > <button id="CreateChat" onclick="start(true)">Create Chat!</button>';
+    var HTML = '<video id="localVideo" autoplay muted style="width: 20%;"></video> <video id= "remoteVideo" autoplay style= "width:20%;" ></video > <button id="CreateChat" onclick="start(true)">Create Chat!</button>';
     var element = document.getElementById("Contacts-list-container");
     element.innerHTML = HTML;
     localVideo = document.getElementById('localVideo');
@@ -152,13 +160,17 @@ function init_videochat() {
 
 var popupactive = false;
 function receiveCall(chatuuid, hostuuid) {
+    remoteclient = hostuuid;
+    console.log("Receiving call from: ", hostuuid);
     //Popup for accepting or rejecting calls
     if (!answered) {
         Incommingcall();
     }
+    uuid = chatuuid;
     var modal = document.getElementById('myModal');
     function check() {
         if (answered) {
+            console.log("Answered call")
             modal.style.display = "none";
             return;
         }
@@ -167,15 +179,13 @@ function receiveCall(chatuuid, hostuuid) {
         }
     }
     if (!popupactive) {
-        popupactive = true;
         check();
+        //popupactive = false;
     }
     if (!callaccepted) {
         return;
     }
-
-    uuid = chatuuid;
-    init_videochat()
+    setTimeout(function () { init_videochat() }, 2000);
     //setTimeout(function () { start(calling); }, 2000); 
 }
 
@@ -185,11 +195,10 @@ function start(isCaller) {
     peerConnection.onicecandidate = gotIceCandidate;
     peerConnection.onaddstream = gotRemoteStream;
     peerConnection.addStream(localStream);
-    console.log("reached here");
     if (isCaller) {
         console.log("iscaller == ", calling);
         peerConnection.createOffer().then(createdDescription).catch(errorHandler);
-        setTimeout(function () { peerConnection.stop(); }, 2000)
+        //setTimeout(function () { peerConnection.stop(); }, 2000)
     }
     loadedrtc = true;
 }
@@ -283,16 +292,29 @@ function CONTACT_acceptinvite(accept, contactuuid) {
     })
 }
 
+function CONTACT_UploadImage() {
+    var fileUpload = $("#FileUpload1").get(0);
+}
+
 function CONTACT_Call(calluuid) {
     remoteclient = calluuid;
+    answered = true;
     calling = true;
     init_videochat();
-    for (var i = 0; i < 20; i++) {
-        console.log("calling...");
-        setTimeout(function () { start(calling) }, 4000);
-    }
-    //    setTimeout(function () { start(calling) }, 4000);
-    //    setTimeout(function () { start(calling) }, 8000);
+    // function checkcall(){
+    // if(remotecallaccept){
+    // console.log("remotecallaccept");
+    // return;
+    // }
+    // else{
+    // console.log("sending call...")
+    // setTimeout(function () { start(calling) }, 3000);
+    // setTimeout(function () { checkcall() }, 3000);
+    // }
+    // }
+    // checkcall();
+    setTimeout(function () { start(calling) }, 4000);
+    //  setTimeout(function () { start(calling) }, 8000);
 }
 
 function CONTACT_sendinvite(username) {
@@ -342,8 +364,6 @@ function SEARCH_results(results) {
 }
 
 //CALL Settings and popup
-
-
 // Get the modal
 
 function PopupSetup() {
@@ -367,6 +387,7 @@ function PopupSetup() {
 function CALL_Accepted() {
     answered = true;
     callaccepted = true;
+    setTimeout(function () { init_videochat() }, 2000);
 }
 
 function CALL_Rejected() {

@@ -49,6 +49,13 @@ httpsServer.listen(HTTPS_PORT, '0.0.0.0');
 
 // ----------------------------------------------------------------------------------------
 
+class connectioninfo{
+	constructor(ws, uuid) {
+		this.uuid = uuid;
+		this.ws = ws;
+	}
+}
+
 // Real server for calls
 var wss = new WebSocketServer({server: httpsServer});
 var chatrooms = [];
@@ -56,69 +63,99 @@ var Clientlist = [];
 var ClientIDlist =[];
 
 wss.on('connection', function(ws){
-    console.log('new connection ');
-    Clientlist.push(ws)
+	var temp = ws;
     ws.on('message', function(message){
         var obj = JSON.parse(message);
 		if(obj['sdp'] === "online"){
 			clientid = obj['clientuuid'];
-			Addonlineuser(clientid);
+			Addonlineuser(clientid, temp);
 		}
 		if(obj['sdp'] === "getonline"){
+			clientid = obj['clientuuid'];
+			ws.uuid = clientid;
+			Addonlineuser(clientid, temp);
 			var onlineuserlist = "";
 			ClientIDlist.forEach(function(user){
 			onlineuserlist += user + ";";		
 			})
 			onlineuserlist = '"' + onlineuserlist + '"';
-			var jsonobj = '{"function": "getonline", "userlist":' + onlineuserlist + '}'
-			console.log(jsonobj)
+			var jsonobj = '{"function": "getonline", "userlist":' + onlineuserlist + ', "remoteclient":"0"}'
 			JSON.stringify(jsonobj);
 			ws.send(jsonobj);
-			console.log("sended: ", onlineuserlist);
-
 		}
-		if(obj['uuid'] === 0){
+		if(obj['uuid'] === 0 || obj['remoteclient'] === 0){
 			return;
 		}
+		
         var uuid = obj['uuid'];
         var clientuuid = obj['clientuuid']
-        wss.joinRoom(uuid, message, clientuuid);
+		var remoteclient = obj['remoteclient'];
+		wss.senddata(remoteclient, message);
+    //    wss.joinRoom(uuid, message, clientuuid);
         //wss.broadcast(message);
     });
 });
 
-function Addonlineuser(userid){
+function Addonlineuser(userid, ws){
+	var currentws = new connectioninfo();
+	currentws.uuid = userid;
+	currentws.ws = ws;
 	for(var i = 0; i < ClientIDlist.length; i++){
-		if(ClientIDlist[i] === userid){
+		console.log(ClientIDlist[i].uuid);
+		if(ClientIDlist[i].uuid === userid){
 			return
 		}
 	}
-	ClientIDlist.push(userid);
+	ClientIDlist.push(currentws);
 }
 
-wss.joinRoom = function(uuid, data, clientuuid){
-    var exists = false;
-    var count = 0;
-    for(var i = 0; i < chatrooms.length; i++){
-        if(chatrooms[i] == uuid){
-            exists = true;
-            wss.senddata(uuid, data, clientuuid)
-        }
-        count = i + 1;
-    }
-    if(!exists){chatrooms[count] = uuid;}
-};
+function sendspecific(specificid, data, uuid){
+	console.log(specificid, uuid);
+	for(var i = 0; i < ClientIDlist.length; i++){
+		if(ClientIDlist[i].uuid === specificid){
+			console.log("Found good uuid", specificid)
+			console.log(ClientIDlist[i].ws.readyState)
+			ClientIDlist[i].ws.send(data)
+			if(ClientIDlist[i].ws.readyState === WebSocket.OPEN){
+				ClientIDlist[i].ws.send(data);
+			}
+			
+		}
+	}
+}
 
-wss.senddata = function(uuid, data, clientuuid){
+
+wss.senddata = function(sendid, data){
     this.clients.forEach(function(client){
-        var obj = JSON.parse(data);
-        var chatUUID = obj['uuid'];
-        var clientUUID = obj['clientuuid']
-        if(chatUUID === uuid && client.readyState === WebSocket.OPEN){
-            client.send(data);
-        }
+		if(client.uuid === sendid && client.readyState === WebSocket.OPEN){
+			client.send(data);
+		}
     })
 }
+
+// wss.joinRoom = function(uuid, data, clientuuid){
+    // var exists = false;
+    // var count = 0;
+    // for(var i = 0; i < chatrooms.length; i++){
+        // if(chatrooms[i] == uuid){
+            // exists = true;
+            // wss.senddata(uuid, data, clientuuid)
+        // }
+        // count = i + 1;
+    // }
+    // if(!exists){chatrooms[count] = uuid;}
+// };
+
+// wss.senddata = function(uuid, data, clientuuid){
+    // this.clients.forEach(function(client){
+        // var obj = JSON.parse(data);
+        // var chatUUID = obj['uuid'];
+        // var clientUUID = obj['clientuuid']
+        // if(chatUUID === uuid && client.readyState === WebSocket.OPEN){
+            // client.send(data);
+        // }
+    // })
+// }
 
 // wss.broadcast = function(data) {
 //     console.log("broadcasting");

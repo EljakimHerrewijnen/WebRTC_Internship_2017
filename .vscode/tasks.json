@@ -1,0 +1,15 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "taskName": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/WebRTC_Internship/WebRTC_Internship/WebRTC_Internship.csproj"
+            ],
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}
