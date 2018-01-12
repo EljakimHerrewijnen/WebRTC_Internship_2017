@@ -12,6 +12,7 @@ var callaccepted = false;
 var answered = false;
 var remoteclient = 0;
 var remotecallaccept = false;
+var countcontacts = 0;
 
 var peerConnectionConfig = {
     'iceServers': [
@@ -80,7 +81,6 @@ function gotMessageFromServer(message) {
         CONTACT_getcontacts();
         return;
     }
-    console.log("reached here")
     //if (!peerConnection) { receiveCall(signal.uuid, signal.clientuuid); }
     // Ignore messages from ourself
     // if (signal.clientuuid === useruuid) { return; }
@@ -88,16 +88,18 @@ function gotMessageFromServer(message) {
     if (!peerConnection && !answered) { receiveCall(signal.uuid, signal.clientuuid); }
     // if (!answered) { return; }
     console.log("passed checkers, loading chat...");
+    if (calling) {
+        answered = true;
+    }
     if (signal.sdp || signal.function === "sdp") {
         peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(function () {
             // Only create answers in response to offers
-            if (signal.sdp.type == 'offer') {
-                console.log("OFFFFEEEER")
+            if (signal.sdp.type === 'offer') {
+
                 peerConnection.createAnswer().then(createdDescription).catch(errorHandler);
             }
         }).catch(errorHandler);
     } else if (signal.ice) {
-        console.log("IIICEEE")
         peerConnection.addIceCandidate(new RTCIceCandidate(signal.ice)).catch(errorHandler);
     }
     else {
@@ -112,6 +114,13 @@ function uuid() {
     return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
         (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
     )
+}
+
+function resizeIframe() {
+    var contactdiv = document.getElementById("Contacts-list-container");
+    var height = countcontacts * 300;
+    console.log(height);
+    // contactdiv.style.height = contactdiv.contentWindow.document.body.scrollHeight + 'px';
 }
 
 function stoptracks() {
@@ -153,7 +162,7 @@ function init_videochat() {
     localVideo = document.getElementById('localVideo');
     remoteVideo = document.getElementById('remoteVideo');
     loadVideos();
-    setTimeout(function () { start(calling); }, 2000)
+    setTimeout(function () { start(calling); }, 2000);
 }
 
 
@@ -170,7 +179,7 @@ function receiveCall(chatuuid, hostuuid) {
     var modal = document.getElementById('myModal');
     function check() {
         if (answered) {
-            console.log("Answered call")
+            console.log("Answered call");
             modal.style.display = "none";
             return;
         }
@@ -185,6 +194,7 @@ function receiveCall(chatuuid, hostuuid) {
     if (!callaccepted) {
         return;
     }
+    console.log("Sending description...");
     setTimeout(function () { init_videochat() }, 2000);
     //setTimeout(function () { start(calling); }, 2000); 
 }
@@ -271,12 +281,13 @@ function CONTACT_CreateImageContact(contactuuid, alt, height, width, contactname
         x = document.getElementById("Contacts-list-container2");
         if (!createdparagraph) {
             createdparagraph = true;
-            HTML += '<div><h2>Contact Invites</h2></div>'
+            HTML += '<h2 id="CONTACT_IncommingInvites">Contact Invites</h2>'
         }
         HTML += '<div id="SEARCH_imagediv"><img id="CONTACT_image" src="../../images/contacts/' + contactuuid + '.jpg" class="ContactImage" onerror=this.src=' + defaultimage + ' alt="' + alt + '" height="' + height + '" width="' + width + '"onclick="CONTACT_Call(' + calluuid + ')' + '"><textarea id="CONTACT_textarea">' + contactname + '</textarea><button type="button" id="CONTACT_acceptbutton" onclick="CONTACT_acceptinvite(true,' + calluuid + ')">Accept</button><button type="button" id="CONTACT_rejectbutton" onclick="CONTACT_acceptinvite(false,' + calluuid + ')">Reject</button></div>'
     }
     element.innerHTML = HTML;
     x.appendChild(element);
+    countcontacts++;
 }
 
 function CONTACT_acceptinvite(accept, contactuuid) {
@@ -296,26 +307,36 @@ function CONTACT_UploadImage() {
     var fileUpload = $("#FileUpload1").get(0);
 }
 
+function CONTACT_Ringing() {
+    console.log("ringing call...");
+
+    if (answered) {
+        console.log("Ringer ended...");
+        return;
+    }
+    else {
+        setTimeout(function () {
+            CONTACT_Ringing();
+            CONTACT_CheckSendCall();
+        }, 6000);
+    }
+}
+
+function CONTACT_CheckSendCall() {
+    if (!answered) {
+        start(calling);
+    }
+}
+
 function CONTACT_Call(calluuid) {
     remoteclient = calluuid;
-    answered = true;
     calling = true;
     init_videochat();
-    // function checkcall(){
-    // if(remotecallaccept){
-    // console.log("remotecallaccept");
-    // return;
-    // }
-    // else{
-    // console.log("sending call...")
-    // setTimeout(function () { start(calling) }, 3000);
-    // setTimeout(function () { checkcall() }, 3000);
-    // }
-    // }
-    // checkcall();
-    setTimeout(function () { start(calling) }, 4000);
-    //  setTimeout(function () { start(calling) }, 8000);
+    CONTACT_Ringing();
+    //setTimeout(function () { start(calling) }, 4000);
+    //setTimeout(function () { start(calling) }, 8000);
 }
+
 
 function CONTACT_sendinvite(username) {
     $.ajax({ type: "GET", url: "/api/contact/addcontact/" + username, async: false });

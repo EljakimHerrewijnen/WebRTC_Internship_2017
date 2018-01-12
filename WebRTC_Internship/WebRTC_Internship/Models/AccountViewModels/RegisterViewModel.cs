@@ -15,7 +15,7 @@ namespace WebRTC_Internship.Models.AccountViewModels
 
         [Required]
         [StringLength(100, ErrorMessage = "Must have at least 4 characters", MinimumLength = 4)]
-        //[RegularExpression(@";|{}[]'", ErrorMessage = "Can not have these characters: ';|/{}[]'")]
+       // [RegularExpression(@";|{}[]'", ErrorMessage = "Can not have these characters: ';|/{}[]'")]
         [Display(Name = "Username")]
         public string Username { get; set; }
 

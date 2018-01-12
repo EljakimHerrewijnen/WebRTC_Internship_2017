@@ -1,6 +1,6 @@
 ﻿
 body{
-
+    height: 90%;
 }
 
 .ContactImage {
@@ -30,11 +30,22 @@ body{
 
 #Contacts-list-container {
     margin-top: 10px;
-    height: 90%;
+    position: center;
     align-self: center;
 }
 
-#CONTACT_acceptbutton{
+#Contacts-list-container2 {
+    margin-top: 10px;
+    position: center;
+    align-self: center;
+    }
+
+#CONTACT_IncommingInvites {
+    width: 300px;
+    position: center;
+}
+
+#CONTACT_acceptbutton {
     border: none;
     width: 100px;
     height: 35px;

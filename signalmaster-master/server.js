@@ -1,4 +1,4 @@
-const HTTPS_PORT = 8443;
+const HTTPS_PORT = 44395;
 
 const fs = require('fs');
 const https = require('https');
@@ -12,13 +12,6 @@ const serverConfig = {
 	ca: fs.readFileSync("./ssl2/COMODORSADomainValidationSecureServerCA.crt"),
 	key: fs.readFileSync("./ssl2/cert.pem"),
 	cert: fs.readFileSync("./ssl2/www_herreweb_nl.crt")
-	
-	//ca: ca
-	//cert: fs.readFileSync("./ssl2/www_herreweb_nl.crt"),
-	//key: fs.readFileSync("./ssl2/key.pem")
-	
-    //crt: fs.readFileSync('./ssl/video_herreweb_nl.crt')
-    //passphrase: ""
 };
 
 // ----------------------------------------------------------------------------------------
@@ -73,10 +66,9 @@ wss.on('connection', function(ws){
 		if(obj['sdp'] === "getonline"){
 			clientid = obj['clientuuid'];
 			ws.uuid = clientid;
-			Addonlineuser(clientid, temp);
 			var onlineuserlist = "";
-			ClientIDlist.forEach(function(user){
-			onlineuserlist += user + ";";		
+			wss.clients.forEach(function(client){
+				onlineuserlist += client.uuid + ";";
 			})
 			onlineuserlist = '"' + onlineuserlist + '"';
 			var jsonobj = '{"function": "getonline", "userlist":' + onlineuserlist + ', "remoteclient":"0"}'
@@ -91,11 +83,10 @@ wss.on('connection', function(ws){
         var clientuuid = obj['clientuuid']
 		var remoteclient = obj['remoteclient'];
 		wss.senddata(remoteclient, message);
-    //    wss.joinRoom(uuid, message, clientuuid);
-        //wss.broadcast(message);
     });
 });
 
+//Out dated, but left for reference
 function Addonlineuser(userid, ws){
 	var currentws = new connectioninfo();
 	currentws.uuid = userid;
@@ -109,11 +100,10 @@ function Addonlineuser(userid, ws){
 	ClientIDlist.push(currentws);
 }
 
+//Out dated, but left for reference
 function sendspecific(specificid, data, uuid){
-	console.log(specificid, uuid);
 	for(var i = 0; i < ClientIDlist.length; i++){
 		if(ClientIDlist[i].uuid === specificid){
-			console.log("Found good uuid", specificid)
 			console.log(ClientIDlist[i].ws.readyState)
 			ClientIDlist[i].ws.send(data)
 			if(ClientIDlist[i].ws.readyState === WebSocket.OPEN){
@@ -132,38 +122,5 @@ wss.senddata = function(sendid, data){
 		}
     })
 }
-
-// wss.joinRoom = function(uuid, data, clientuuid){
-    // var exists = false;
-    // var count = 0;
-    // for(var i = 0; i < chatrooms.length; i++){
-        // if(chatrooms[i] == uuid){
-            // exists = true;
-            // wss.senddata(uuid, data, clientuuid)
-        // }
-        // count = i + 1;
-    // }
-    // if(!exists){chatrooms[count] = uuid;}
-// };
-
-// wss.senddata = function(uuid, data, clientuuid){
-    // this.clients.forEach(function(client){
-        // var obj = JSON.parse(data);
-        // var chatUUID = obj['uuid'];
-        // var clientUUID = obj['clientuuid']
-        // if(chatUUID === uuid && client.readyState === WebSocket.OPEN){
-            // client.send(data);
-        // }
-    // })
-// }
-
-// wss.broadcast = function(data) {
-//     console.log("broadcasting");
-//     this.clients.forEach(function(client) {
-//         if(client.readyState === WebSocket.OPEN) {
-//             client.send(data);
-//         }
-//     });
-// };
 
 console.log('Server running. Visit https://localhost:' + HTTPS_PORT + ' in Firefox/Chrome (note the HTTPS; there is no HTTP -> HTTPS redirect!)');

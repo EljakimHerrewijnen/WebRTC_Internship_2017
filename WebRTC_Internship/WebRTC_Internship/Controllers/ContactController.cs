@@ -70,6 +70,7 @@ namespace WebRTC_Internship.Controllers
             {
                 if (files[0].Length > 0)
                 {
+                    //if in future more files are needed for uploading, this could be changed easily.
                     var stream = new FileStream(("wwwroot/images/contacts/" + id + ".jpg"), FileMode.Create);
                     await files[0].CopyToAsync(stream);
                 }
@@ -79,14 +80,12 @@ namespace WebRTC_Internship.Controllers
                 return Content("500");
             }
             return Redirect("/api/contact/home");
-            return Content("200");
         }
 
         public async  Task<String> getcontacts()
         {
             string id = _userManager.GetUserId(User);
-            
-            var contacts = db.Contact.Where<ContactModel>(b => b.ContactUUID.Contains(id));//b => b.UUID == id);
+            var contacts = db.Contact.Where<ContactModel>(b => b.ContactUUID.Contains(id));
             string returnstring = "";
             foreach (var item in contacts)
             {

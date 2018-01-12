@@ -1,4 +1,4 @@
-﻿@{ 
+﻿@{
     Layout = "/Views/Shared/_Layout.cshtml";
 }
 
@@ -17,7 +17,23 @@
     </div>
 </div>
 
+<div>
+    <form method="post" enctype="multipart/form-data" asp-controller="Contact" asp-action="Uploadfile">
+        <div class="form-group">
+            <div class="col-md-10">
+                <p>Zet uw profielfoto online! </p>
+                <input type="file" name="files" multiple accept="img/jpg" />
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-10">
+                <input type="submit" value="Zet deze foto online" />
+            </div>
+        </div>
+    </form>
+</div>
+
 @section Scripts {
     @RenderSection("Scripts", required: false)
 }
-        
+
