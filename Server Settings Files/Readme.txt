@@ -1,0 +1,1 @@
+Indien nodig zijn hierbij nog wat server instelling bestanden die te gebruiken zijn om de instellingen die ik gehanteerd heb te gebruiken
