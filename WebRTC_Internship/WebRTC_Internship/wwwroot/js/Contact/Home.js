@@ -14,17 +14,15 @@ var remoteclient = 0;
 var remotecallaccept = false;
 var countcontacts = 0;
 
+var autoaccept = false;
+var autofullscreen = false;
+
 var peerConnectionConfig = {
     'iceServers': [
         { 'urls': 'stun:stun.services.mozilla.com' },
         { 'urls': 'stun:stun.l.google.com:19302' },
         // { 'urls': 'turn:turn:52.232.119.53:3478', 'credential': 'yourpassword', 'username':'youruser' },
-        { 'urls': 'stun:stun1.l.google.com:19302' },
-        {
-            'urls': 'turn:numb.viagenie.ca:3478',
-            'credential': 'm8b56b5',
-            'username': 'e.herrewijnen@gmail.com'
-        },
+        { 'urls': 'stun:stun1.l.google.com:19302' }
     ]
 };
 
@@ -73,6 +71,7 @@ function errorHandler(error) {
     console.log(error);
 }
 
+//Main engine of this application.
 function gotMessageFromServer(message) {
     console.log("got message from server");
     var signal = JSON.parse(message.data);
@@ -81,12 +80,7 @@ function gotMessageFromServer(message) {
         CONTACT_getcontacts();
         return;
     }
-    //if (!peerConnection) { receiveCall(signal.uuid, signal.clientuuid); }
-    // Ignore messages from ourself
-    // if (signal.clientuuid === useruuid) { return; }
-    //if (signal.uuid !== uuid) { console.log("Wrong chat send..."); return; }
     if (!peerConnection && !answered) { receiveCall(signal.uuid, signal.clientuuid); }
-    // if (!answered) { return; }
     console.log("passed checkers, loading chat...");
     if (calling) {
         answered = true;
@@ -141,11 +135,19 @@ function resetbody() {
 function pageReady() {
     serverConnection = new WebSocket('wss://www.herreweb.nl:8443');        //wss://www.herreweb.nl:8443'); ///+ window.location.hostname + ':8443');
     serverConnection.onmessage = gotMessageFromServer;
-    //CONTACT_CheckonlineUsers(contactslist)
     useruuid = $.ajax({ type: "GET", url: "/api/contact/getcurrentuser", async: false }).responseText;
     uuid = $.ajax({ type: "GET", url: "/api/videochat/generate_chat", async: false }).responseText;
     while (useruuid === null) { }
     setTimeout(function () { checkonlineusers(); }, 750);
+    if (getCookie('AutoAccept') === 'true') {
+        autoaccept = true;
+        document.getElementById('switchaccept').checked = true;
+    }
+    if (getCookie('AutoFullScreen') === 'true') {
+        autofullscreen = true;
+        document.getElementById('switchfullscreen').checked = true;
+        Action_fullscreen();
+    }
     pageloaded = true;
 }
 
@@ -153,25 +155,33 @@ $(document).ready(function () {
     pageReady();
 });
 
-
 //VIDEO Custom calls
 function init_videochat() {
-    var HTML = '<video id="localVideo" autoplay muted style="width: 20%;"></video> <video id= "remoteVideo" autoplay style= "width:20%;" ></video > <button id="CreateChat" onclick="start(true)">Create Chat!</button>';
+    var HTML = '<video id="localVideo" autoplay muted></video> <video id= "remoteVideo" autoplay></video>';
     var element = document.getElementById("Contacts-list-container");
     element.innerHTML = HTML;
     localVideo = document.getElementById('localVideo');
     remoteVideo = document.getElementById('remoteVideo');
+    var container = document.getElementById('Contacts-list-container2');
+    var HTML = '<button onclick="StopCall()" style="background-color: yellow; width: 250px; height:120px; margin-left: 50%;">Beeindig gesprek</button>';
+    container.innerHTML = HTML;
     loadVideos();
     setTimeout(function () { start(calling); }, 2000);
 }
 
-
+function StopCall() {
+    location.reload();
+}
 
 var popupactive = false;
 function receiveCall(chatuuid, hostuuid) {
     remoteclient = hostuuid;
     console.log("Receiving call from: ", hostuuid);
     //Popup for accepting or rejecting calls
+    if (autoaccept) {
+        answered = true;
+        callaccepted = true;
+    }
     if (!answered) {
         Incommingcall();
     }
@@ -199,6 +209,7 @@ function receiveCall(chatuuid, hostuuid) {
     //setTimeout(function () { start(calling); }, 2000); 
 }
 
+//Sends a p2p request to the other user.
 function start(isCaller) {
     console.log("Starting chat!");
     peerConnection = new RTCPeerConnection(peerConnectionConfig);
@@ -227,17 +238,17 @@ function CONTACT_getcontacts() {
             CONTACT_loadcontacts(data)
         })
         .fail(function () {
-            alert("error");
+            alert("Er is een fout opgetreden. Als dit probleem aanhoud neemt u dan contact met ons op.");
+            location.reload();
         })
         .always(function () {
         });
 }
 
+//Checks the online users from the back end. In production this MUST BE changed. 
 function CONTACT_Checkonline(remoteuserid) {
-    console.log(onlineusers);
     var temp = onlineusers.split(";");
     for (var i = 0; i < temp.length; i++) {
-        console.log("Checking current user: ", temp[i])
         if (temp[i] === remoteuserid) {
             return true;
         }
@@ -257,7 +268,7 @@ function CONTACT_loadcontacts(data) {
     }
 }
 
-//Obscure function for creating clickable picture elements.
+//Obscure function for creating clickable picture elements. For contacts. Nothing fancy, but it works
 var createdparagraph = false;
 
 function CONTACT_CreateImageContact(contactuuid, alt, height, width, contactname, status, online) {
@@ -270,10 +281,10 @@ function CONTACT_CreateImageContact(contactuuid, alt, height, width, contactname
     if (status === "Approved") {
         HTML += '<div id="Contact_imagediv"><img id="CONTACT_image" src="../../images/contacts/' + contactuuid + '.jpg" class="ContactImage" onerror=this.src=' + defaultimage + ' alt="' + alt + '"  height="' + height + '" width="' + width + '" onclick="CONTACT_Call(' + calluuid + ')' + '">';
         if (online) {
-            var textarea = '<textarea id="CONTACT_textarea"> ' + contactname + ' is online</textarea></div>';
+            var textarea = '<textarea readonly id="CONTACT_textarea"> ' + contactname + ' is online</textarea></div>';
         }
         else {
-            var textarea = '<textarea id="CONTACT_textarea"> ' + contactname + ' is offline</textarea></div>';
+            var textarea = '<textarea readonly id="CONTACT_textarea"> ' + contactname + ' is offline</textarea></div>';
         }
         HTML += textarea;
     }
@@ -283,7 +294,7 @@ function CONTACT_CreateImageContact(contactuuid, alt, height, width, contactname
             createdparagraph = true;
             HTML += '<h2 id="CONTACT_IncommingInvites">Contact Invites</h2>'
         }
-        HTML += '<div id="SEARCH_imagediv"><img id="CONTACT_image" src="../../images/contacts/' + contactuuid + '.jpg" class="ContactImage" onerror=this.src=' + defaultimage + ' alt="' + alt + '" height="' + height + '" width="' + width + '"onclick="CONTACT_Call(' + calluuid + ')' + '"><textarea id="CONTACT_textarea">' + contactname + '</textarea><button type="button" id="CONTACT_acceptbutton" onclick="CONTACT_acceptinvite(true,' + calluuid + ')">Accept</button><button type="button" id="CONTACT_rejectbutton" onclick="CONTACT_acceptinvite(false,' + calluuid + ')">Reject</button></div>'
+        HTML += '<div id="SEARCH_imagediv"><img id="CONTACT_image" src="../../images/contacts/' + contactuuid + '.jpg" class="ContactImage" onerror=this.src=' + defaultimage + ' alt="' + alt + '" height="' + height + '" width="' + width + '"onclick="CONTACT_Call(' + calluuid + ')' + '"><textarea readonly id="CONTACT_textarea">' + contactname + '</textarea><button type="button" id="CONTACT_acceptbutton" onclick="CONTACT_acceptinvite(true,' + calluuid + ')">Accept</button><button type="button" id="CONTACT_rejectbutton" onclick="CONTACT_acceptinvite(false,' + calluuid + ')">Reject</button></div>'
     }
     element.innerHTML = HTML;
     x.appendChild(element);
@@ -301,21 +312,29 @@ function CONTACT_acceptinvite(accept, contactuuid) {
         data: JSON.stringify({ contactuuid: contactuuid, accept: accept }),
         accept: 'application/json'
     })
+    setTimeout(function () { location.reload(); }, 1000);
 }
 
+//I dont think I use this anymore
 function CONTACT_UploadImage() {
     var fileUpload = $("#FileUpload1").get(0);
 }
 
+//Calling, this part does the actual ringing to the other user.
+var counter = 0;
 function CONTACT_Ringing() {
+    if (counter > 25) { // 25 x 6 = 150 seconden
+        counter = 0;
+        location.reload();
+    }
     console.log("ringing call...");
-
     if (answered) {
         console.log("Ringer ended...");
         return;
     }
     else {
         setTimeout(function () {
+            counter++;
             CONTACT_Ringing();
             CONTACT_CheckSendCall();
         }, 6000);
@@ -328,21 +347,20 @@ function CONTACT_CheckSendCall() {
     }
 }
 
+//Sends the actual calling request, because we know that the user has ansered the call
 function CONTACT_Call(calluuid) {
     remoteclient = calluuid;
     calling = true;
     init_videochat();
     CONTACT_Ringing();
-    //setTimeout(function () { start(calling) }, 4000);
-    //setTimeout(function () { start(calling) }, 8000);
 }
-
 
 function CONTACT_sendinvite(username) {
     $.ajax({ type: "GET", url: "/api/contact/addcontact/" + username, async: false });
+    setTimeout(function () { location.reload(); }, 1000);
 }
 
-//Search users
+//Search users from database. Will also check who is online, but this depends on the signalling server
 function SEARCH_view() {
     resetbody();
     var HTML = '<div id="SEARCH_contact"><input type="text" id="SEARCH_input" placeholder="Search.."><button id="SEARCH_button" onclick="SEARCH_action()">Search</button></div>';
@@ -365,7 +383,7 @@ function SEARCH_loadcontacts(contactuuid, alt, height, width, contactname) {
     var invitename = "'" + contactname + "'";
     var calluuid = "'" + contactuuid + "'";
     var defaultimage = '"../../images/contacts/default.jpg"';
-    var HTML = '<div id="SEARCH_imagediv"><img id="SEARCH_image" src="../../images/contacts/' + contactuuid + '.jpg" class="ContactImage" onerror=this.src=' + defaultimage + ' alt="' + alt + '"  height="' + height + '" width="' + width + '"><textarea id="SEARCH_textarea">' + contactname + '</textarea><button type="button" id="SEARCH_invitebutton" onclick="CONTACT_sendinvite(' + invitename + ')">Invite</button><button type="button" id="SEARCH_callbutton" onclick="CONTACT_Call(' + calluuid + ')">Call</button></div>'
+    var HTML = '<div id="SEARCH_imagediv"><img id="SEARCH_image" src="../../images/contacts/' + contactuuid + '.jpg" class="ContactImage" onerror=this.src=' + defaultimage + ' alt="' + alt + '"  height="' + height + '" width="' + width + '"><textarea readonly id="SEARCH_textarea">' + contactname + '</textarea><button type="button" id="SEARCH_invitebutton" onclick="CONTACT_sendinvite(' + invitename + ')">Invite</button><button type="button" id="SEARCH_callbutton" onclick="CONTACT_Call(' + calluuid + ')">Call</button></div>'
     //var HTML = '<img src="../../images/contacts/' + contactuuid + '.jpg" class="ContactImage" onerror=this.src=' + defaultimage + ' alt="' + alt + '"  height="' + height + '" width="' + width + '"><button id="' + calluuid + '" onclick="CONTACT_sendinvite(' + calluuid + ')">invite</button>';
     console.log(HTML);
     element.innerHTML = HTML;
@@ -386,10 +404,24 @@ function SEARCH_results(results) {
 
 //CALL Settings and popup
 // Get the modal
+// The modal size changes when the screen resolution changes. I never got this working very well and maybe this should be changed if used in production.
 
 function PopupSetup() {
+    var callacceptbutton = document.getElementById('callaccept');
+    callacceptbutton.style['font-size'] = document.body.clientWidth * (26 / 800) + "px";
+    var y = document.body.clientWidth * (26 / 800) + "px";
+    callacceptbutton.style['height'] = document.body.clientWidth * (110 / 800) + "px";
+    var calldenybutton = document.getElementById('calldeny');
+    calldenybutton.style['font-size'] = document.body.clientWidth * (26 / 800) + "px";
+    calldenybutton.style['height'] = document.body.clientWidth * (110 / 800) + "px";
     var modal = document.getElementById('myModal');
-    // Get the <span> element that closes the modal
+    var x = document.body.clientWidth * (400 / 800) + "px";
+    if ((x * y) <= 2000) {
+        x = x * 1.1;
+    }
+    modal.style['height'] = x + "px";
+    var p = "U wordt gebeld door: " + remoteclient;
+    modal.getElementsByTagName("p").innerHTML = p;
     var span = document.getElementsByClassName("close")[0];
     // When the user clicks on <span> (x), close the modal
     span.onclick = function () {
@@ -418,4 +450,83 @@ function CALL_Rejected() {
 
 function Incommingcall() {
     PopupSetup();
+}
+
+//Settings -- and some more toolsets.
+function setCookie(cname, cvalue, exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+    var expires = "expires=" + d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+
+function setAutoAccept() {
+    setCookie('AutoAccept', 'true', 365);
+    setTimeout(function () { location.reload(); }, 500)
+}
+
+function removeAutoAccept() {
+    setCookie('AutoAccept', 'true', -1);
+    setTimeout(function () { location.reload(); }, 500)
+}
+
+function setFullScreen() {
+    setCookie('AutoFullScreen', 'true', 365);
+    setTimeout(function () { location.reload(); }, 500)
+}
+
+function removeFullScreen() {
+    setCookie('AutoFullScreen', 'false', -1);
+    setTimeout(function () { location.reload(); }, 500)
+}
+
+function AutoAccept_Changed() {
+    if (document.getElementById('switchaccept').checked) {
+        setAutoAccept();
+    } else {
+        removeAutoAccept();
+    }
+}
+
+function AutoFullScreen_Changed() {
+    if (document.getElementById('switchfullscreen').checked) {
+        setFullScreen();
+    } else {
+        removeFullScreen();
+    }
+}
+
+//Fullscreen - This does not work yet because it needs user input before a browser is allowed to go to fullscreen.
+function requestFullScreen(element) {
+    // Supports most browsers and their versions.
+    var requestMethod = element.requestFullScreen || element.webkitRequestFullScreen || element.mozRequestFullScreen || element.msRequestFullScreen;
+    if (requestMethod) { // Native full screen.
+        requestMethod.call(element);
+    } else if (typeof window.ActiveXObject !== "undefined") { // Older IE.
+        var wscript = new ActiveXObject("WScript.Shell");
+        if (wscript !== null) {
+            wscript.SendKeys("{F11}");
+        }
+    }
+}
+
+function Action_fullscreen() {
+    var elem = document.body; // Make the body go full screen.
+    requestFullScreen(elem);
 }

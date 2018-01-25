@@ -2,32 +2,47 @@
 @{
     ViewData["Title"] = "Home";
 }
-<!DOCTYPE html>
-<html>
-<head>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-    <script src="~/js/Contact/Home.js"></script>
-    <link href="@Url.Content("~/css/Home.css")" type="text/css" rel="stylesheet" />
-</head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="~/js/Contact/Home.js"></script>
+<link href="@Url.Content("~/css/Home.css")" type="text/css" rel="stylesheet" />
 
-<body>
+
+<div id="Contacts-list-container">
+</div>
+
+<div id="Contacts-list-container2">
+</div>
+
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+
+    <!-- Modal content -->
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <p>U wordt gebeld door:</p>
+        <button id="callaccept" onclick="CALL_Accepted()">Gesprek opnemen</button>
+        <button id="calldeny" onclick="CALL_Rejected()">Gesprek afwijzen</button>
+    </div>
+    
+</div>
+<form>
     <div id="SEARCH_area"><button id="SEARCH_viewbutton" type="button" onclick="SEARCH_view()">Search contacts</button></div>
-    <div id="Contacts-list-container">
-    </div>
-    <div id="Contacts-list-container2">
-    </div>
-
-
-    <!-- The Modal -->
-    <div id="myModal" class="modal">
-
-        <!-- Modal content -->
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <p>Incomming call!</p>
-            <button onclick="CALL_Accepted()">Answer Call</button>
-            <button onclick="CALL_Rejected()">Reject Call</button>
+    <div id="Setting_Switch">
+        <div>
+            <label id="Switch_AutoAccept" class="switch">
+                <label readonly style='padding-left: 70px; margin-bottom: 100px; white-space: nowrap;'>Automatisch een gesprek opnemen? </label>
+                <input type="checkbox" onchange="AutoAccept_Changed()" id="switchaccept">
+                <span class="slider"></span>
+            </label>
         </div>
-    </div>   
-</body>
-</html>
+        @*<div style="margin-top: 60px;">
+            <label class="switch" id="Switch_AutoFullScreen" >
+                <label readonly style='padding-left: 70px; white-space: nowrap; margin-bottom: 80px;'>Automatisch naar volledig scherm gaan?</label>
+                <input type="checkbox" onchange="AutoFullScreen_Changed()" id="switchfullscreen">
+                <span class="slider"></span>
+            </label>
+        </div>*@
+    </div>
+</form>
+

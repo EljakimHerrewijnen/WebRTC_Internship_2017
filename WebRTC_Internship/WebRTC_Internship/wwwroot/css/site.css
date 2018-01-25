@@ -8,7 +8,6 @@
 }
 
 .Layout_logo {
-    float: right;
     margin-top: 1px;
 }
 /* Wrapping element */
@@ -18,6 +17,9 @@
     padding-right: 15px;
 }
 
+#navbar_rtc {
+    background-color: #242220;
+}
 /* Carousel */
 .carousel-caption p {
     font-size: 20px;

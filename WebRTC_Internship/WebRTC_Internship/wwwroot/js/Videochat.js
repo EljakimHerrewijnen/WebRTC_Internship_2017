@@ -30,7 +30,7 @@ function pageReady() {
 	if (navigator.mediaDevices.getUserMedia) {
 		navigator.mediaDevices.getUserMedia(constraints).then(getUserMediaSuccess).catch(errorHandler);
 	} else {
-		alert('Your browser does not support getUserMedia API');
+		alert('Uw apparaat ondersteunt deze applicatie niet.');
 	}
 }
 
@@ -62,7 +62,7 @@ function gotMessageFromServer(message) {
 	if (signal.sdp) {
 		peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(function () {
 			// Only create answers in response to offers
-			if (signal.sdp.type == 'offer') {
+			if (signal.sdp.type === 'offer') {
 				peerConnection.createAnswer().then(createdDescription).catch(errorHandler);
 			}
 		}).catch(errorHandler);

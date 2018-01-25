@@ -17,13 +17,13 @@ namespace WebRTC_Internship.Controllers
 
         public IActionResult About()
         {
-            ViewData["Message"] = "Your application description page.";
+            ViewData["Message"] = "Informatie over Videophone.";
             return View();
         }
 
         public IActionResult Contact()
         {
-            ViewData["Message"] = "Your contact page.";
+            ViewData["Message"] = "Gemaakt door 'ICT Group BV'.";
 
             return View();
         }
