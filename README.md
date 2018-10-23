@@ -12,3 +12,7 @@ The server worked with calls going in and out of the NAT firewall of the place w
 
 
 The code/software is distributed under a MIT license
+
+
+I used the tutorials and code of the following repositories:
+* https://github.com/andyet/signalmaster
